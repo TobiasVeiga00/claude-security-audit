@@ -143,9 +143,30 @@ async function main() {
       const blocking = store.blocking(threshold);
       const bySeverity = {};
       for (const f of blocking) bySeverity[f.severity] = (bySeverity[f.severity] ?? 0) + 1;
-      emit({ failOn: threshold, blocking: blocking.length, bySeverity, ids: blocking.map((f) => f.id) });
+      emit({ failOn: threshold, blocking: blocking.length, suppressed: store.loadSuppressions().length, bySeverity, ids: blocking.map((f) => f.id) });
       // Exit 2 (distinct from a usage error) so CI can gate on open findings.
       if (blocking.length) process.exit(2);
+      break;
+    }
+
+    case 'suppress': {
+      const id = args._[1];
+      if (!id) fail('usage: finding.mjs suppress <ID> --reason "<why>" [--expires YYYY-MM-DD]');
+      const reason = typeof args.reason === 'string' ? args.reason.trim() : '';
+      if (!reason) fail('suppress requires --reason "<why this is accepted>". A silent suppression is not reviewable.');
+      const found = store.load().find((f) => f.id === id || f.fingerprint === id);
+      if (!found) fail(`no finding with id ${id}`);
+      const entry = {
+        fingerprint: found.fingerprint,
+        id: found.id,
+        title: found.title,
+        file: found.location?.file ?? null,
+        reason,
+        expires: args.expires ? String(args.expires) : null,
+        suppressedAt: new Date().toISOString(),
+      };
+      store.addSuppression(entry);
+      emit({ suppressed: found.id, fingerprint: found.fingerprint, file: store.ignoreFile, reason, expires: entry.expires });
       break;
     }
 
@@ -161,6 +182,7 @@ async function main() {
         '  stats                            counts by severity, domain and status',
         '  diff <prevScan> <currScan>       what changed between two scans (--fail-on-new)',
         '  gate --fail-on <severity>        exit non-zero if an open finding is >= severity (CI)',
+        '  suppress <ID> --reason ...       add a .auditignore entry (survives re-scans)',
         '',
         `  statuses: ${STATUSES.join(', ')}`,
         `  verdicts: ${VERDICTS.join(', ')}`,

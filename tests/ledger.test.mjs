@@ -98,6 +98,23 @@ test('the CI gate blocks on open findings at or above the threshold, and nothing
   assert.equal(store.blocking('high').length, 1, 'an accepted-risk finding no longer blocks');
 });
 
+test('a .auditignore suppression clears the gate by fingerprint, and expiry re-enables it', () => {
+  const dir = tmp();
+  const store = new FindingStore(dir);
+  store.add([base({ title: 'crit', severity: 'critical', location: { file: 'a.js', symbol: 'a' } })]);
+  const f = store.load()[0];
+  assert.equal(store.blocking('high').length, 1, 'blocks before suppression');
+
+  store.addSuppression({ fingerprint: f.fingerprint, reason: 'accepted', expires: '2999-01-01' });
+  assert.equal(store.blocking('high').length, 0, 'an active suppression clears the gate');
+
+  fs.writeFileSync(path.join(dir, '.auditignore'), JSON.stringify([{ fingerprint: f.fingerprint, reason: 'x', expires: '2000-01-01' }]));
+  assert.equal(store.blocking('high').length, 1, 'an expired suppression no longer hides the finding');
+
+  fs.writeFileSync(path.join(dir, '.auditignore'), JSON.stringify([{ fingerprint: 'a-different-fingerprint', reason: 'x' }]));
+  assert.equal(store.blocking('high').length, 1, 'suppression is scoped to the exact fingerprint');
+});
+
 test('diff reports findings introduced, persisting and resolved between scans', () => {
   const store = new FindingStore(tmp());
   store.add([

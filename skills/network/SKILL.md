@@ -12,10 +12,10 @@ authorization gate clears it. That is not a formality — an unauthorized scan i
 in many jurisdictions, a criminal act.
 
 Rules of engagement:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/scope.mjs" show 2>&1 | head -20`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/scope.mjs" show 2>&1`
 
 Tooling:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain network,wireless --missing 2>&1 | head -12`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain network,wireless --missing 2>&1`
 
 ---
 

@@ -55,13 +55,17 @@ async function main() {
     }
 
     case 'list': {
-      const rows = store.query({
+      const all = store.query({
         severity: args.severity,
         domain: args.domain ? String(args.domain).split(',') : undefined,
         status: args.status ? String(args.status).split(',') : undefined,
         minPriority: args.priority ? Number(args.priority) : undefined,
         tool: args.tool,
       });
+      // `--limit N` caps the output cross-platform, so skill preambles do not
+      // depend on a POSIX `| head` that fails under PowerShell.
+      const limit = args.limit !== undefined ? Number(args.limit) : undefined;
+      const rows = Number.isFinite(limit) && limit >= 0 ? all.slice(0, limit) : all;
       if (args.json) { emit(rows); break; }
       if (rows.length === 0) { process.stdout.write('No findings match.\n'); break; }
       for (const f of rows) {
@@ -69,7 +73,8 @@ async function main() {
         const tier = (f.risk?.tier ?? '--').padEnd(3);
         process.stdout.write(`${f.id}  ${sev} ${tier} ${f.domain.padEnd(13)} ${f.title}\n`);
       }
-      process.stdout.write(`\n${rows.length} finding(s).\n`);
+      const suffix = rows.length < all.length ? ` of ${all.length}` : '';
+      process.stdout.write(`\n${rows.length}${suffix} finding(s).\n`);
       break;
     }
 

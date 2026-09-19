@@ -16,7 +16,7 @@ Current ledger:
 !`node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" stats 2>&1`
 
 Coverage:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/coverage.mjs" summary 2>&1 | head -20`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/coverage.mjs" summary 2>&1`
 
 ---
 

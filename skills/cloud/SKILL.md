@@ -12,7 +12,7 @@ it is reading files. **Live** posture assessment queries a real account and does
 Know which one you are doing before you run anything.
 
 Tooling:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain iac,container,cloud --missing 2>&1 | head -14`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain iac,container,cloud --missing 2>&1`
 
 ---
 

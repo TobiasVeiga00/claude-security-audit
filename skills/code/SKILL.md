@@ -17,7 +17,7 @@ and the exclusions are what make this output worth reading.
 !`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" $ARGUMENTS --budget 160000 --json .security-audit/surface.json --summary`
 
 Available tooling:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain code --missing 2>&1 | head -12`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain code --missing 2>&1`
 
 ---
 

@@ -11,7 +11,7 @@ Fix confirmed findings — carefully, one at a time, and never in a way that tra
 a security bug for a functional one.
 
 Open findings, highest priority first:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" list --status open 2>&1 | head -25`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" list --status open --limit 25 2>&1`
 
 ---
 

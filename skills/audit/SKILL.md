@@ -26,13 +26,13 @@ Current directory:
 !`node -e "console.log(process.cwd())"`
 
 Existing audit state:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" stats 2>&1 || echo "no findings ledger yet"`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" stats 2>&1`
 
 Rules of engagement:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/scope.mjs" show 2>&1 | head -20`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/scope.mjs" show 2>&1`
 
 Threat intelligence:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/intel.mjs" status 2>&1 | head -12`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/intel.mjs" status 2>&1`
 
 ---
 

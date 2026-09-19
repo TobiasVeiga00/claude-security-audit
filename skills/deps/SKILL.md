@@ -104,7 +104,24 @@ cdxgen -o .security-audit/sbom.cdx.json
 An SBOM is not a security control on its own. Its value is answering "am I
 affected?" in minutes the next time something like Log4Shell lands.
 
-## Step 5 — Answering "am I affected by CVE-X"
+## Step 5 — License and legal exposure
+
+Not every supply-chain risk is a CVE. A dependency's licence can be a liability
+the client must be told about:
+
+- **Copyleft in a proprietary product.** GPL / AGPL / SSPL pulled into a closed
+  distribution can force source disclosure — AGPL reaches even a network
+  service. Flag these explicitly; the decision is legal, not technical.
+- **Unknown or missing licence.** A package with no declared licence is not
+  "free to use" — by default it is all-rights-reserved.
+- **A licence change on upgrade.** A permissive package that relicensed can
+  change your obligations at the next bump.
+
+The SBOM already carries this — `syft` records each component's licence — so read
+it from there rather than guessing. Report licence risk as its own line, tagged
+`compliance`, kept separate from vulnerability findings.
+
+## Step 6 — Answering "am I affected by CVE-X"
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/intel.mjs" cve CVE-2021-44228

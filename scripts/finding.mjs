@@ -86,12 +86,14 @@ async function main() {
       const [, id, status] = args._;
       if (!id || !status) fail(`usage: finding.mjs status <ID> <${STATUSES.join('|')}> [--note "..."]`);
       if (!STATUSES.includes(status)) fail(`unknown status "${status}". Valid: ${STATUSES.join(', ')}`);
-      if (['false-positive', 'rejected', 'accepted-risk'].includes(status) && !args.note) {
-        fail(`status "${status}" requires --note explaining what you checked. A dismissal without a reason is not reviewable.`);
+      // A bare `--note` yields the boolean true; require a real, non-empty reason.
+      const note = typeof args.note === 'string' ? args.note.trim() : '';
+      if (['false-positive', 'rejected', 'accepted-risk'].includes(status) && !note) {
+        fail(`status "${status}" requires --note "<what you checked>". A dismissal without a reason is not reviewable.`);
       }
-      const updated = store.setStatus(id, status, { note: args.note ? String(args.note) : '', by: args.by ? String(args.by) : 'auditor' });
+      const updated = store.setStatus(id, status, { note, by: args.by ? String(args.by) : 'auditor' });
       if (!updated) fail(`no finding with id ${id}`);
-      emit({ id: updated.id, status: updated.status, note: args.note ?? '' });
+      emit({ id: updated.id, status: updated.status, verdict: updated.verdict, note });
       break;
     }
 
@@ -135,15 +137,21 @@ async function main() {
 /** Reject findings that cannot possibly be reviewed, with an actionable message. */
 function validateShape(finding, index) {
   const problems = [];
-  const label = finding.title ? `"${String(finding.title).slice(0, 50)}"` : `#${index}`;
+  const label = finding?.title ? `"${String(finding.title).slice(0, 50)}"` : `#${index}`;
 
-  if (!finding.title) problems.push(`${label}: title is required`);
-  if (!finding.location || Object.values(finding.location).every((v) => v == null)) {
-    problems.push(`${label}: a location is required — a finding nobody can navigate to is not actionable`);
+  if (finding === null || typeof finding !== 'object' || Array.isArray(finding)) {
+    return [`#${index}: each finding must be a JSON object`];
   }
-  if (finding.verdict === 'needs-validation') {
+  if (!finding.title) problems.push(`${label}: title is required`);
+  if (!finding.location || typeof finding.location !== 'object' || Array.isArray(finding.location)
+    || Object.values(finding.location).every((v) => v == null)) {
+    problems.push(`${label}: a location object is required — a finding nobody can navigate to is not actionable`);
+  }
+  // A lead is a lead whether it was declared via `verdict` or via `status`.
+  const isLead = finding.verdict === 'needs-validation' || finding.status === 'needs-validation';
+  if (isLead) {
     if (!(finding.blockers ?? []).length) {
-      problems.push(`${label}: verdict "needs-validation" requires blockers — name the fact you could not reach`);
+      problems.push(`${label}: a needs-validation lead requires blockers — name the fact you could not reach`);
     }
   } else if (!finding.description && !finding.impact && !finding.boundary?.result) {
     // A boundary whose `result` slot is filled already states the consequence,

@@ -62,7 +62,21 @@ export function readLines(file) {
 
 export function appendLine(file, line) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.appendFileSync(file, line + '\n', 'utf8');
+  // If a previous write was truncated (e.g. a crash mid-append left a line with
+  // no trailing newline), prepend one so this record is not glued onto the
+  // partial line and silently lost on the next replay.
+  let prefix = '';
+  try {
+    const { size } = fs.statSync(file);
+    if (size > 0) {
+      const fd = fs.openSync(file, 'r');
+      const buf = Buffer.alloc(1);
+      fs.readSync(fd, buf, 0, 1, size - 1);
+      fs.closeSync(fd);
+      if (buf[0] !== 0x0a) prefix = '\n';
+    }
+  } catch { /* file does not exist yet: no prefix needed */ }
+  fs.appendFileSync(file, prefix + line + '\n', 'utf8');
 }
 
 export function ensureDir(dir) {
@@ -180,6 +194,12 @@ export function estimateFileTokens(file) {
 /** Minimal, predictable argv parser: --key value, --key=value, --flag, positionals. */
 export function parseArgs(argv = process.argv.slice(2)) {
   const out = { _: [] };
+  // A repeated flag collects its values into an array, so `--set-aside a
+  // --set-aside b` keeps both instead of silently dropping the first.
+  const assign = (key, value) => {
+    if (key in out) out[key] = [].concat(out[key], value);
+    else out[key] = value;
+  };
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
     if (token === '--') { out._.push(...argv.slice(i + 1)); break; }
@@ -187,11 +207,11 @@ export function parseArgs(argv = process.argv.slice(2)) {
       const body = token.slice(2);
       const eq = body.indexOf('=');
       if (eq !== -1) {
-        out[body.slice(0, eq)] = body.slice(eq + 1);
+        assign(body.slice(0, eq), body.slice(eq + 1));
       } else if (i + 1 < argv.length && !argv[i + 1].startsWith('--')) {
-        out[body] = argv[++i];
+        assign(body, argv[++i]);
       } else {
-        out[body] = true;
+        assign(body, true);
       }
     } else {
       out._.push(token);

@@ -5,6 +5,22 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.0.1](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.0.0...v1.0.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* **cvss:** correct v4.0 Safety level and rounding, and parser edge cases ([abfd0c3](https://github.com/TobiasVeiga00/claude-security-audit/commit/abfd0c385f654869aab27362d15f7da70ea98b84))
+* **cvss:** correct v4.0 Safety level and rounding, and parser edge cases ([54f6d43](https://github.com/TobiasVeiga00/claude-security-audit/commit/54f6d4367d208a539cd1276f6e3353e6b22ef5ad))
+* **gate:** close five authorization-gate bypasses found by audit ([93765b0](https://github.com/TobiasVeiga00/claude-security-audit/commit/93765b022a4514080d8d2fed1c68e427fd4c5854))
+* **gate:** close five authorization-gate bypasses found by audit ([3abc3f8](https://github.com/TobiasVeiga00/claude-security-audit/commit/3abc3f804599573f4af85b7f7a9a0918013840f7))
+* **ledger:** correct finding merge, verdicts and coverage invariants ([30eef52](https://github.com/TobiasVeiga00/claude-security-audit/commit/30eef523ee31e24de4882bf8063d109c8995540f))
+* **ledger:** correct finding merge, verdicts and coverage invariants ([32289a2](https://github.com/TobiasVeiga00/claude-security-audit/commit/32289a2a1e04896d092c93e87e7c99808dfc6c82))
+* remove stray e.gz dump and correct crossed agent domain labels ([d00354d](https://github.com/TobiasVeiga00/claude-security-audit/commit/d00354da638009a91351b3da0807f9918897c65c))
+* remove stray e.gz dump and correct crossed agent domain labels ([377b477](https://github.com/TobiasVeiga00/claude-security-audit/commit/377b477695319e7c01036a8f54a0c5fb8087ecd3))
+* **scan:** ReDoS, broken regexes, credential leaks and importer robustness ([15547a2](https://github.com/TobiasVeiga00/claude-security-audit/commit/15547a2935256002e78de41ae65d42a4c054d000))
+* **scan:** ReDoS, broken regexes, credential leaks and importer robustness ([7487526](https://github.com/TobiasVeiga00/claude-security-audit/commit/74875269aa30f7893af48b018ac7ee1ad1f661db))
+
 ## [1.0.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.0.0...v1.0.0) (2026-09-19)
 
 

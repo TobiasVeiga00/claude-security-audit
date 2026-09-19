@@ -80,6 +80,10 @@ const CWE_TOP25_2025 = [
 
 async function syncKev(outDir) {
   const raw = await getJson(SOURCES.kev);
+  // Structured fields only. The free-text description and requiredAction make
+  // up most of the catalogue's size and are not read at audit time, so they are
+  // dropped to keep the shipped plugin lean; the authoritative text is one NVD
+  // lookup away.
   const vulnerabilities = (raw.vulnerabilities ?? [])
     .map((v) => ({
       cve: v.cveID,
@@ -90,8 +94,6 @@ async function syncKev(outDir) {
       dueDate: v.dueDate,
       ransomware: v.knownRansomwareCampaignUse === 'Known',
       cwes: v.cwes ?? [],
-      requiredAction: v.requiredAction,
-      description: v.shortDescription,
     }))
     .sort((a, b) => a.cve.localeCompare(b.cve));
 

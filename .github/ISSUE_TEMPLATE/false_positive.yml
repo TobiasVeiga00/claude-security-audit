@@ -1,0 +1,28 @@
+name: False positive
+description: The plugin reported something that is not actually a vulnerability.
+labels: [false-positive]
+body:
+  - type: markdown
+    attributes:
+      value: These reports are especially valuable — precision is the whole game.
+  - type: input
+    id: finding
+    attributes:
+      label: Finding ID or rule
+      placeholder: SA-XXXX or the signal id (e.g. js.sqli)
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it is not a real finding
+      description: What control makes it safe, and where does that control live?
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: The code that was flagged
+      render: text
+    validations:
+      required: true

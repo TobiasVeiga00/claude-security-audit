@@ -1,0 +1,73 @@
+name: Release
+
+# Conventional-commit driven releases. release-please watches main, keeps a
+# release pull request open with the accumulated changelog, and cuts a tag plus
+# a GitHub release when that PR is merged.
+#
+# The refresh-intel workflow is designed to cooperate with this: a routine data
+# refresh commits as `chore(data)` and never triggers a release, while a
+# material intelligence change commits as `feat(intel)` and does.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.release.outputs.release_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  verify-release:
+    name: Verify the cut release
+    needs: release-please
+    if: needs.release-please.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # A release must be installable and correct. Gate the tag on the tests and
+      # on the plugin validator before anyone can install it.
+      - name: Test
+        run: node --test "tests/**/*.test.mjs"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate plugin
+        run: claude plugin validate . --strict
+
+      - name: Confirm versions are in lockstep
+        run: |
+          node -e "
+          const pkg = require('./package.json').version;
+          const plugin = require('./.claude-plugin/plugin.json').version;
+          const tag = '${{ needs.release-please.outputs.tag }}'.replace(/^v/, '');
+          if (pkg !== plugin || pkg !== tag) {
+            console.error('::error::version mismatch — package.json ' + pkg + ', plugin.json ' + plugin + ', tag ' + tag);
+            process.exit(1);
+          }
+          console.log('All three agree on ' + pkg);
+          "

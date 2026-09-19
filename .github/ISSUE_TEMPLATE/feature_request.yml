@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a detection, a scanner importer, or a capability.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What can you not do today, or what does the plugin miss?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: The proposal
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New detection signal
+        - Scanner importer
+        - New domain / skill
+        - Reporting
+        - Threat intelligence
+        - Authorization / scope
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: false-positive-risk
+    attributes:
+      label: False-positive risk
+      description: If this is a new detection, when might it fire on safe code? Fewer false positives is the priority.

@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The plugin ships to Windows and POSIX alike, so both are gated.
+        os: [ubuntu-latest, windows-latest]
+        node: ['18', '20', '22']
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Zero runtime dependencies by design: there is nothing to install.
+      - name: Verify no production dependencies
+        shell: bash
+        run: |
+          if [ -f package.json ] && node -e "const p=require('./package.json');process.exit(Object.keys(p.dependencies||{}).length?1:0)"; then
+            echo "No runtime dependencies, as intended."
+          else
+            echo "::error::Runtime dependencies found. This plugin must stay dependency-free."
+            exit 1
+          fi
+
+      - name: Run tests
+        run: node --test "tests/**/*.test.mjs"
+
+      - name: Check every script parses
+        shell: bash
+        run: |
+          for f in $(find scripts hooks -name '*.mjs'); do
+            node --check "$f" || { echo "::error file=$f::syntax error"; exit 1; }
+          done
+
+  validate-plugin:
+    name: Validate plugin manifest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate (strict)
+        run: claude plugin validate . --strict
+
+  self-audit:
+    name: Dogfood — audit our own scripts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # A security-audit plugin that will not run against itself is not credible.
+      # The surface mapper and the report generator run here on our own tree.
+      - name: Map our own attack surface
+        run: node scripts/surface.mjs . --json surface.json --summary
+
+      - name: Fail the build on a committed secret
+        run: |
+          node -e "
+          const s = JSON.parse(require('fs').readFileSync('surface.json','utf8'));
+          const real = (s.secretCandidates || []).filter(c => !c.likelySample);
+          if (real.length) {
+            console.error('::error::' + real.length + ' non-sample secret candidate(s) in the tree');
+            for (const c of real) console.error('  ' + c.file + ':' + c.line + '  ' + c.provider);
+            process.exit(1);
+          }
+          console.log('No committed secrets detected.');
+          "
+
+  intel-freshness:
+    name: Intelligence freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Warn (do not fail) when vendored intel is stale, so a reviewer sees it.
+      - name: Report intelligence age
+        run: |
+          node -e "
+          const fs = require('fs');
+          const m = JSON.parse(fs.readFileSync('intel/MANIFEST.json','utf8'));
+          const days = (Date.now() - Date.parse(m.generatedAt)) / 86400000;
+          console.log('Vendored intelligence is ' + days.toFixed(1) + ' days old.');
+          if (days > 14) console.log('::warning::Intelligence is stale; the scheduled refresh should have run.');
+          "

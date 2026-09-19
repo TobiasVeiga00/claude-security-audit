@@ -1,0 +1,28 @@
+{
+  "name": "claude-security-audit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Comprehensive, continuously-updated security auditing plugin for Claude Code.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "surface": "node scripts/surface.mjs",
+    "audit:self": "node scripts/surface.mjs . --summary",
+    "intel:sync": "node scripts/intel-sync.mjs --out ./intel",
+    "intel:status": "node scripts/intel.mjs status",
+    "validate": "claude plugin validate . --strict"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TobiasVeiga00/claude-security-audit.git"
+  },
+  "author": "Tobias Veiga",
+  "bugs": {
+    "url": "https://github.com/TobiasVeiga00/claude-security-audit/issues"
+  },
+  "homepage": "https://github.com/TobiasVeiga00/claude-security-audit#readme"
+}

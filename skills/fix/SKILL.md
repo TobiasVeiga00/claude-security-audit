@@ -64,8 +64,17 @@ any of them does not get applied.
    input still works. Without this test, a later refactor silently reopens the
    hole.
 
-4. **Apply, then verify.** Make the edit, run the test, and run the project's
-   existing suite to catch the behaviour changes you did not intend.
+4. **Draft in isolation, prove closure, then keep.** Prepare the change without
+   disturbing the working tree the user is in — a `git worktree`, a branch, or a
+   scratch copy. Then prove **all three**, and only then apply it:
+   - the **regression test** passes now and *failed* before the fix;
+   - the project's **existing suite** still passes — no behaviour change;
+   - **re-run the exact check that raised this finding** (the scanner rule via
+     `finding.mjs import`, or the boundary trace) and confirm it **no longer
+     fires**. A fix you cannot re-detect as closed is a fix you are guessing at.
+
+   Re-audit the diff itself for a newly introduced defect before you keep it — a
+   patch is security-sensitive code like any other.
 
 5. **Record it.**
    ```bash

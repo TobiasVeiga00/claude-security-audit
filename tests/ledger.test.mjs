@@ -45,6 +45,17 @@ test('a human verdict survives a later machine re-detection', () => {
   assert.equal(store.load()[0].status, 'false-positive', 'the re-scan must not reopen it');
 });
 
+test('a validator confirmation raises confidence off the tentative default', () => {
+  const store = new FindingStore(tmp());
+  store.add([base()]);
+  const id = store.load()[0].id;
+  assert.equal(store.load()[0].confidence, 'tentative', 'findings default to tentative');
+  store.setStatus(id, 'triaged', { confidence: 'firm', note: 'held on all axes' });
+  assert.equal(store.load()[0].confidence, 'firm', 'a confirmation raises confidence');
+  store.setStatus(id, 'triaged', { confidence: 'bogus', note: 'x' });
+  assert.equal(store.load()[0].confidence, 'firm', 'an invalid confidence value is ignored, not applied');
+});
+
 test('two rule-less findings in the same file do not collide', () => {
   const a = normalizeFinding({ title: 'Hardcoded AWS key', severity: 'high', domain: 'secrets', location: { file: 'src/config.js' } });
   const b = normalizeFinding({ title: 'Debug flag enabled', severity: 'medium', domain: 'secrets', location: { file: 'src/config.js' } });

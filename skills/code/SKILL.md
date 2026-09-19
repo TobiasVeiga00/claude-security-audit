@@ -1,6 +1,6 @@
 ---
 name: code
-description: Secure code review — hunts injection, deserialization, access control, cryptography and unsafe-sink defects in application source, anchored to CWE and OWASP. Use for "review this code for security", "SAST", "is this code vulnerable", "secure code review", "check for injection".
+description: Secure code review — hunts injection, deserialization, access control, cryptography, memory-safety (native/unsafe code) and unsafe-sink defects in application source, anchored to CWE and OWASP. Use for "review this code for security", "SAST", "is this code vulnerable", "secure code review", "check for injection", "buffer overflow".
 argument-hint: "[path] [--changed-only]"
 allowed-tools: Read, Glob, Grep, Write, Agent, Bash(node:*), Bash(git:*), Bash(semgrep:*), Bash(opengrep:*), Bash(bandit:*), Bash(gosec:*), Bash(brakeman:*), Bash(njsscan:*)
 ---
@@ -77,6 +77,16 @@ privilege change; password comparison that is not constant time.
 signatures or integrity (**not** for cache keys or ETags — see the exclusions);
 ECB mode; static or reused IVs; `Math.random`, `rand()` or `math/rand` for
 anything security-relevant; hardcoded keys.
+
+**Memory safety, native code (CWE-120, -121, -122, -125, -787, -416, -415, -134,
+-190)** — in C, C++, Objective-C and `unsafe` Rust/Go: unbounded copies
+(`strcpy`, `strcat`, `sprintf`, `gets`, `scanf`), stack and heap buffer
+overflow, out-of-bounds read/write, use-after-free and double-free, a non-literal
+format string, and integer overflow or truncation feeding an allocation size or
+a bounds check. The surface map's `c.overflow`, `c.memory`, `c.format-string` and
+`c.int-overflow` sinks locate these; then prove the attacker controls the length,
+index or count that overflows. Here a crash is the *floor*, not the finding —
+trace to attacker-influenced memory or a controlled write primitive.
 
 **Path and file handling (CWE-22, -434)** — user-controlled paths without a
 resolved-root check; uploads without content-type *and* extension *and* size

@@ -139,6 +139,14 @@ It receives them cold and tries to **refute** each.
 Survivors become `confirmed`. Casualties become `rejected` or `needs-validation`
 — with the reason recorded, so the next run does not re-litigate them.
 
+**For a `critical` or P0 candidate, require consensus.** A false "critical" in a
+client report is expensive, so launch a *second*, independent
+`security-audit:exploit-validator` on those alone and confirm only what **both**
+validators independently fail to refute. A split vote is not a confirmation — it
+drops to `needs-validation` with both reasons recorded. This mirrors a
+multi-reviewer panel for the highest-stakes findings while keeping the single
+pass for everything else.
+
 Then apply the false-positive gate yourself over what remains:
 `${CLAUDE_PLUGIN_ROOT}/references/false-positives.md`.
 

@@ -96,7 +96,7 @@ async function main() {
       if (['false-positive', 'rejected', 'accepted-risk'].includes(status) && !note) {
         fail(`status "${status}" requires --note "<what you checked>". A dismissal without a reason is not reviewable.`);
       }
-      const updated = store.setStatus(id, status, { note, by: args.by ? String(args.by) : 'auditor' });
+      const updated = store.setStatus(id, status, { note, by: args.by ? String(args.by) : 'auditor', confidence: args.confidence ? String(args.confidence) : undefined });
       if (!updated) fail(`no finding with id ${id}`);
       emit({ id: updated.id, status: updated.status, verdict: updated.verdict, note });
       break;

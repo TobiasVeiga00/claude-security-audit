@@ -434,7 +434,7 @@ export class FindingStore {
     return rows.sort(byPriorityDesc);
   }
 
-  setStatus(id, status, { note = '', by = 'auditor' } = {}) {
+  setStatus(id, status, { note = '', by = 'auditor', confidence } = {}) {
     if (!STATUSES.includes(status)) throw new Error(`unknown status "${status}"`);
     const target = this.load().find((f) => f.id === id || f.fingerprint === id);
     if (!target) return null;
@@ -454,6 +454,9 @@ export class FindingStore {
       op: 'status',              // marks this as a deliberate human record
       status,
       verdict,
+      // A validator that confirmed a candidate raises its confidence, so the
+      // report never shows "tentative" on a finding that survived refutation.
+      confidence: (confidence && CONFIDENCE.includes(confidence)) ? confidence : target.confidence,
       severity: scored ? (target.severity ?? 'info') : null,
       risk: scored ? (target.risk ?? fuseRisk({
         severity: target.severity ?? 'info',

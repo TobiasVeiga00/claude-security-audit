@@ -144,6 +144,14 @@ test('the domain filter accepts audit-domain nouns, not just raw tags', () => {
   // A domain with no signal in the tree yields an empty, honest result.
   const mobile = mapSurface(FIXTURE, { budget: 200000, top: 50, domain: 'mobile' });
   assert.equal(mobile.hotspots.length, 0, 'no mobile code means no mobile hotspots');
+
+  // Regression: `--domain llm` had no DOMAIN_MATCHERS entry, so the llm skill's
+  // surface preamble selected zero files on every repo.
+  const llm = mapSurface(FIXTURE, { budget: 200000, top: 50, domain: 'llm' });
+  assert.ok(
+    llm.hotspots.some((h) => h.file.endsWith('src/llm/completion.js')),
+    '--domain llm must select LLM code, not return an empty map',
+  );
 });
 
 /**

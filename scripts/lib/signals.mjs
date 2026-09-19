@@ -68,6 +68,7 @@ export const PATH_SIGNALS = [
   { id: 'admin', re: /(^|[\/_.-])(admin|superuser|root|internal|debug|dev-?tools?|backdoor|impersonat\w*)([\/_.-]|$)/i, weight: 24, tags: ['privileged'] },
   { id: 'pii', re: /(^|[\/_.-])(user|users|account|accounts|profile|customer|patient|employee|member|contact|address|ssn|dob)([\/_.-]|$)/i, weight: 12, tags: ['pii'] },
   { id: 'network', re: /(^|[\/_.-])(http|client|fetch|request|axios|proxy|cors|socket|websocket|ws|tls|ssl|cert)([\/_.-]|$)/i, weight: 14, tags: ['network'] },
+  { id: 'llm', re: /(^|[\/_.-])(prompt|prompts|llm|langchain|llamaindex|openai|anthropic|completion|completions|embedding|embeddings|rag|vectorstore|vectordb|chatbot|genai)([\/_.-]|$)/i, weight: 20, tags: ['llm'] },
   { id: 'config', re: /(^|[\/_.-])(config|configuration|settings?|environment|env|secrets?|credentials?)([\/_.-]|$)/i, weight: 18, tags: ['config'] },
   { id: 'infra', re: /(^|[\/])(terraform|tf|infra|infrastructure|deploy|deployment|k8s|kubernetes|helm|charts?|ansible|pulumi|cdk|cloudformation)([\/_.-]|$)/i, weight: 18, tags: ['iac'] },
   { id: 'ci', re: /(^|[\/])\.(github|gitlab|circleci|azure-pipelines|drone|woodpecker)([\/_.-]|$)/i, weight: 20, tags: ['ci', 'supply-chain'] },

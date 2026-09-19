@@ -12,7 +12,7 @@ is easy. Handling it correctly is where people get it wrong — usually by
 deleting the line and believing that fixed it.
 
 Tooling available:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain secrets --missing 2>&1 | head -8`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain secrets --missing 2>&1`
 
 ---
 

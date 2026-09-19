@@ -2,6 +2,41 @@
   "description": "Upstream versions of the methodology frameworks this plugin references.",
   "note": "Only identifiers and version numbers are recorded. OWASP prose is CC-BY-SA and is linked, never vendored.",
   "frameworks": {
+    "owasp-asvs": {
+      "repo": "OWASP/ASVS",
+      "version": "v5.0.0_release",
+      "releasedAt": "2025-05-30T09:35:31Z",
+      "url": "https://github.com/OWASP/ASVS/releases/tag/v5.0.0_release"
+    },
+    "owasp-mastg": {
+      "repo": "OWASP/mastg",
+      "version": "v2.0.0",
+      "releasedAt": "2026-06-30T07:08:28Z",
+      "url": "https://github.com/OWASP/mastg/releases/tag/v2.0.0"
+    },
+    "owasp-masvs": {
+      "repo": "OWASP/masvs",
+      "version": "v2.1.0",
+      "releasedAt": "2024-01-18T11:15:29Z",
+      "url": "https://github.com/OWASP/masvs/releases/tag/v2.1.0"
+    },
+    "owasp-wstg": {
+      "repo": "OWASP/wstg",
+      "version": "v4.2",
+      "releasedAt": "2020-12-03T15:23:44Z",
+      "url": "https://github.com/OWASP/wstg/releases/tag/v4.2"
+    },
+    "nuclei-templates": {
+      "repo": "projectdiscovery/nuclei-templates",
+      "version": "v10.4.9",
+      "releasedAt": "2026-09-16T14:58:45Z",
+      "url": "https://github.com/projectdiscovery/nuclei-templates/releases/tag/v10.4.9"
+    },
+    "owasp-top10": {
+      "repo": "OWASP/Top10",
+      "version": "2025",
+      "detectedBy": "directory"
+    },
     "nuclei-template-stats": {
       "total": 13535,
       "bySeverity": {

@@ -110,6 +110,13 @@ new P0 fails the PR — and `finding.mjs diff <prev> <curr>` reports exactly wha
 was introduced, resolved or still persists since the last scan, which is what
 the append-only ledger was built for.
 
+**Its triage survives a fresh clone.** An accepted or false-positive verdict
+goes into a committed, reviewable `.auditignore` keyed on the finding's
+edit-resistant fingerprint — with a `reason` and an optional `expires` date — so
+the same issue re-found in CI inherits the decision instead of re-alerting, and a
+stale suppression decays on its expiry rather than hiding a real regression
+forever.
+
 **It scores CVSS correctly.** v3.1 exactly to the FIRST specification; v4.0 using
 FIRST's official MacroVector tables, validated against published NVD scores — and
 it refuses to guess a score when the tables are absent rather than invent one.

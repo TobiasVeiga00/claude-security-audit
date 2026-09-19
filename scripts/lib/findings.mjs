@@ -329,6 +329,39 @@ export class FindingStore {
   constructor(cwd = process.cwd()) {
     this.home = auditHome(cwd);
     this.file = path.join(this.home, 'findings.jsonl');
+    // A committed, human-reviewable suppression file at the repo root (like
+    // .semgrepignore / .trivyignore), so an accepted or false-positive verdict
+    // survives a fresh CI clone instead of living only in the local ledger.
+    this.ignoreFile = path.join(cwd, '.auditignore');
+  }
+
+  /**
+   * Active suppressions from `.auditignore`. Each entry keys on the finding's
+   * edit-resistant `fingerprint`, so a re-found issue inherits the verdict. An
+   * entry with an `expires` date in the past is inactive — suppressions decay by
+   * design, which is how you avoid a stale ignore file hiding a real regression.
+   */
+  loadSuppressions(now = new Date()) {
+    let entries;
+    try { entries = JSON.parse(fs.readFileSync(this.ignoreFile, 'utf8')); } catch { return []; }
+    if (!Array.isArray(entries)) return [];
+    const today = now.toISOString().slice(0, 10);
+    return entries.filter((e) => e && typeof e === 'object' && e.fingerprint
+      && (!e.expires || String(e.expires) >= today));
+  }
+
+  isSuppressed(finding, suppressions = this.loadSuppressions()) {
+    return suppressions.some((e) => e.fingerprint === finding.fingerprint);
+  }
+
+  /** Append (or replace) a `.auditignore` entry for a finding's fingerprint. */
+  addSuppression(entry) {
+    let entries = [];
+    try { const parsed = JSON.parse(fs.readFileSync(this.ignoreFile, 'utf8')); if (Array.isArray(parsed)) entries = parsed; } catch { /* new file */ }
+    entries = entries.filter((e) => e?.fingerprint !== entry.fingerprint);
+    entries.push(entry);
+    fs.writeFileSync(this.ignoreFile, `${JSON.stringify(entries, null, 2)}\n`);
+    return entry;
   }
 
   load() {
@@ -475,11 +508,13 @@ export class FindingStore {
    */
   blocking(severity = 'high') {
     const floor = severityRank(severity);
+    const suppressions = this.loadSuppressions();
     return this.load()
       .filter((f) => f.verdict === 'confirmed'
         && !NON_VULNERABLE_STATUSES.has(f.status)
         && !['fixed', 'accepted-risk'].includes(f.status)
-        && severityRank(f.severity) >= floor)
+        && severityRank(f.severity) >= floor
+        && !this.isSuppressed(f, suppressions))
       .sort(byPriorityDesc);
   }
 

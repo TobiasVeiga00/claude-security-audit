@@ -9,10 +9,7 @@
     "url": "https://github.com/TobiasVeiga00"
   },
   "homepage": "https://github.com/TobiasVeiga00/claude-security-audit#readme",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/TobiasVeiga00/claude-security-audit.git"
-  },
+  "repository": "https://github.com/TobiasVeiga00/claude-security-audit",
   "license": "MIT",
   "keywords": [
     "security",
@@ -46,10 +43,8 @@
     "default_report_format": {
       "type": "string",
       "title": "Default report formats",
-      "description": "Formats produced when you run the report skill without arguments.",
-      "options": ["markdown", "html", "sarif", "json", "csv"],
-      "multiple": true,
-      "default": "markdown"
+      "description": "Comma-separated formats produced when you run the report skill without arguments (markdown, html, sarif, json, csv).",
+      "default": "markdown,html,sarif"
     },
     "token_budget": {
       "type": "number",

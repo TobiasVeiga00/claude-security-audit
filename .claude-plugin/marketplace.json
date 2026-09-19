@@ -1,6 +1,5 @@
 {
   "name": "claude-security-audit",
-  "displayName": "Claude Security Audit",
   "description": "Comprehensive, continuously-updated security auditing for Claude Code.",
   "owner": {
     "name": "Tobias Veiga",

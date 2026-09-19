@@ -310,9 +310,13 @@ function renderMarkdown(model) {
     for (const f of model.findings) p(...renderFindingMarkdown(f));
   }
 
-  /* -------- 5. Needs validation -------- */
+  // Sections 1-4 are always present; everything after is conditional, so the
+  // numbering is computed rather than hard-coded to avoid duplicate headings.
+  let section = 4;
+
+  /* -------- Needs validation -------- */
   if (model.needsValidation.length) {
-    p('## 5. Needs validation', '');
+    p(`## ${++section}. Needs validation`, '');
     p('Each entry below is a **source-grounded hypothesis that this audit could not settle**, because confirming it depends on a fact outside the artefacts in scope — a deployment setting, a runtime value, or the behaviour of a third party.', '');
     p('**These carry no severity on purpose.** They are not low-confidence vulnerabilities; they are open questions. Assigning a number to an unproven claim is how a report loses the reader\'s trust. Resolve the blocker and the lead becomes either a finding or a dismissal.', '');
     p('| ID | Lead | Location | Blocked by | How to settle it |', '| --- | --- | --- | --- | --- |');
@@ -339,8 +343,8 @@ function renderMarkdown(model) {
     }
   }
 
-  /* -------- 6. Roadmap -------- */
-  p(`## ${model.needsValidation.length ? 6 : 5}. Remediation roadmap`, '');
+  /* -------- Roadmap -------- */
+  p(`## ${++section}. Remediation roadmap`, '');
   for (const tier of ['P0', 'P1', 'P2', 'P3', 'P4']) {
     const items = model.byTier[tier] ?? [];
     if (!items.length) continue;
@@ -352,10 +356,10 @@ function renderMarkdown(model) {
     p('');
   }
 
-  /* -------- 6. Framework coverage -------- */
+  /* -------- Framework coverage -------- */
   const frameworkSections = Object.entries(model.frameworks).filter(([, map]) => Object.keys(map).length);
   if (frameworkSections.length) {
-    p('## 6. Framework mapping', '');
+    p(`## ${++section}. Framework mapping`, '');
     for (const [key, map] of frameworkSections) {
       p(`### ${FRAMEWORK_LABEL[key] ?? key}`, '', '| Reference | Findings |', '| --- | --- |');
       for (const [id, ids] of Object.entries(map).sort()) {

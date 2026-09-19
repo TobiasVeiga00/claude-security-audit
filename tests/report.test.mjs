@@ -137,6 +137,30 @@ test('markdown renders every section and escapes table-breaking characters', () 
   );
 });
 
+test('section numbering has no duplicates or gaps regardless of which sections appear', () => {
+  const numbers = (md) => md.split('\n')
+    .map((l) => /^## (\d+)\. /.exec(l))
+    .filter(Boolean)
+    .map((m) => Number(m[1]));
+
+  // With a needs-validation section present.
+  const withLeads = numbers(renderMarkdown(model()));
+  assert.deepEqual(withLeads, [...withLeads].sort((a, b) => a - b), 'sections must be in order');
+  assert.equal(new Set(withLeads).size, withLeads.length, 'no duplicate section numbers');
+  assert.deepEqual(withLeads, withLeads.map((_, i) => i + 1), 'no gaps in numbering');
+
+  // Without one: build a model whose only findings are confirmed.
+  const { store } = seed();
+  const confirmedOnly = buildModel(
+    store.load().filter((f) => f.verdict !== 'needs-validation'),
+    { scope: null, meta: {} },
+  );
+  const md = renderMarkdown(confirmedOnly);
+  const withoutLeads = numbers(md);
+  assert.equal(new Set(withoutLeads).size, withoutLeads.length, 'no duplicates without a leads section');
+  assert.ok(!md.includes('## 5. Needs validation'));
+});
+
 test('html escapes attacker-controlled content everywhere it is embedded', () => {
   const html = renderHtml(model());
   assert.ok(!html.includes('<script>alert(1)</script>'), 'title payload must be escaped');

@@ -145,8 +145,10 @@ function validateShape(finding, index) {
     if (!(finding.blockers ?? []).length) {
       problems.push(`${label}: verdict "needs-validation" requires blockers — name the fact you could not reach`);
     }
-  } else if (!finding.description && !finding.impact) {
-    problems.push(`${label}: a confirmed finding needs a description or an impact statement`);
+  } else if (!finding.description && !finding.impact && !finding.boundary?.result) {
+    // A boundary whose `result` slot is filled already states the consequence,
+    // which is exactly what a description or impact would carry.
+    problems.push(`${label}: a confirmed finding needs a description, an impact statement, or a boundary.result`);
   }
   return problems;
 }

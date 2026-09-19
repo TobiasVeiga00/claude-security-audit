@@ -209,6 +209,25 @@ export const SINK_SIGNALS = {
     { id: 'sw.log', re: /print\s*\([^)]*(token|password|secret|key)|NSLog\s*\([^)]*(token|password|secret)/i, weight: 22, cwe: 'CWE-532', hint: 'secret written to log' },
   ],
 
+  rust: [
+    { id: 'rust.cmd-shell', re: /Command::new\s*\(\s*"(sh|bash|cmd|powershell)"[\s\S]{0,80}\.arg\s*\(\s*"(-c|\/C|-Command)"/, weight: 30, cwe: 'CWE-78', hint: 'spawns a shell — command-injection vector' },
+    { id: 'rust.sqli', re: /(query|query_as|execute|prepare)\s*\(\s*&?\s*format!\s*\(/, weight: 32, cwe: 'CWE-89', hint: 'SQL built with format! instead of bound parameters' },
+    { id: 'rust.tls-noverify', re: /danger_accept_invalid_certs\s*\(\s*true\s*\)|danger_accept_invalid_hostnames\s*\(\s*true\s*\)/, weight: 30, cwe: 'CWE-295', hint: 'TLS certificate or hostname verification disabled' },
+    { id: 'rust.deser', re: /(bincode::deserialize|serde_yaml::from_(str|reader|slice))\s*(::<[^>]+>)?\s*\(/, weight: 18, cwe: 'CWE-502', hint: 'deserialization of possibly untrusted bytes' },
+  ],
+
+  shell: [
+    { id: 'sh.pipe-shell', re: /\b(curl|wget)\b[^\n|]*\|\s*(sudo\s+)?(ba)?sh\b/, weight: 28, cwe: 'CWE-494', hint: 'remote script piped straight into a shell' },
+    { id: 'sh.eval', re: /\beval\s+["'$]/, weight: 30, cwe: 'CWE-78', hint: 'eval of a variable or command substitution' },
+    { id: 'sh.insecure-tls', re: /\bcurl\b[^\n]*\s(-k|--insecure)\b|\bwget\b[^\n]*--no-check-certificate/, weight: 24, cwe: 'CWE-295', hint: 'TLS certificate verification disabled' },
+  ],
+
+  powershell: [
+    { id: 'ps.iex', re: /\b(Invoke-Expression|iex)\b/, weight: 30, cwe: 'CWE-95', hint: 'Invoke-Expression evaluates a string as code' },
+    { id: 'ps.download-exec', re: /(Invoke-WebRequest|iwr|Net\.WebClient|DownloadString)[\s\S]{0,120}(Invoke-Expression|\biex\b|Start-Process)/, weight: 30, cwe: 'CWE-494', hint: 'download-and-execute' },
+    { id: 'ps.insecure-tls', re: /ServerCertificateValidationCallback\s*=\s*\{[^}]*\$true|SkipCertificateCheck/, weight: 24, cwe: 'CWE-295', hint: 'TLS certificate validation disabled' },
+  ],
+
   terraform: [
     { id: 'tf.open-ingress', re: /cidr_blocks\s*=\s*\[\s*"0\.0\.0\.0\/0"|ipv6_cidr_blocks\s*=\s*\[\s*"::\/0"|source_ranges\s*=\s*\[\s*"0\.0\.0\.0\/0"/, weight: 34, cwe: 'CWE-284', hint: 'network open to the internet' },
     { id: 'tf.public-bucket', re: /acl\s*=\s*"public-read|block_public_acls\s*=\s*false|ignore_public_acls\s*=\s*false|restrict_public_buckets\s*=\s*false/, weight: 34, cwe: 'CWE-732', hint: 'publicly readable object storage' },

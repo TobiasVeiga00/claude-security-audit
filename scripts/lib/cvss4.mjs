@@ -33,8 +33,11 @@ const LEVELS = {
   VI: { H: 0.0, L: 0.1, N: 0.2 },
   VA: { H: 0.0, L: 0.1, N: 0.2 },
   SC: { H: 0.1, L: 0.2, N: 0.3 },
-  SI: { H: 0.1, L: 0.2, N: 0.3 },
-  SA: { H: 0.1, L: 0.2, N: 0.3 },
+  // Subsequent Integrity/Availability carry a "Safety" level, reachable via the
+  // modified metrics MSI:S / MSA:S. Every EQ4=0 maximal vector uses SI:S/SA:S,
+  // so omitting S makes every such candidate invalid and the vector unscoreable.
+  SI: { S: 0.0, H: 0.1, L: 0.2, N: 0.3 },
+  SA: { S: 0.0, H: 0.1, L: 0.2, N: 0.3 },
   CR: { H: 0.0, M: 0.1, L: 0.2 },
   IR: { H: 0.0, M: 0.1, L: 0.2 },
   AR: { H: 0.0, M: 0.1, L: 0.2 },
@@ -247,7 +250,10 @@ export function scoreV40(vector, { tablesPath = null } = {}) {
 
   let score = steps === 0 ? base : base - total / steps;
   score = Math.max(0, Math.min(10, score));
-  score = Number(score.toFixed(1));
+  // FIRST rounds to one decimal with Math.round(x*10)/10. `toFixed(1)` rounds on
+  // the exact binary expansion and sends every raw x.x5 the wrong way, so ~1 in
+  // 90 vectors printed a score 0.1 below NVD/FIRST.
+  score = Math.round(score * 10) / 10;
 
   return {
     ok: true,

@@ -35,7 +35,10 @@ export function shortHash(input, length = 12) {
 
 export function readJson(file, fallback = undefined) {
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    // Strip a UTF-8 BOM: PowerShell 5.1 and Notepad prepend one, and JSON.parse
+    // rejects it — which would silently turn a hand-edited scope.json into
+    // "no scope" through the fallback path.
+    return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^﻿/, ''));
   } catch (err) {
     if (fallback !== undefined) return fallback;
     throw new Error(`Cannot read JSON at ${file}: ${err.message}`);

@@ -16,7 +16,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/methodology.md` and
 
 ## Surface
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" ${1:-.} --budget 150000 --domain entrypoint --summary`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" $ARGUMENTS --budget 150000 --domain entrypoint --summary`
 
 ---
 

@@ -40,25 +40,13 @@
       "sensitive": true,
       "required": false
     },
-    "default_report_format": {
-      "type": "string",
-      "title": "Default report formats",
-      "description": "Comma-separated formats produced when you run the report skill without arguments (markdown, html, sarif, json, csv).",
-      "default": "markdown,html,sarif"
-    },
     "token_budget": {
       "type": "number",
       "title": "Audit token budget",
-      "description": "Maximum tokens of source the attack-surface mapper may select for review in one pass. Lower is cheaper and shallower.",
+      "description": "Maximum tokens of source the attack-surface mapper selects for review in one pass. Lower is cheaper and shallower. The audit and report skills read this via ${user_config.token_budget}.",
       "min": 20000,
       "max": 900000,
       "default": 180000
-    },
-    "strict_authorization": {
-      "type": "boolean",
-      "title": "Strict authorization gate",
-      "description": "When enabled, intrusive tooling is blocked unless .security-audit/scope.json authorizes the exact target. Disabling this is not recommended and never bypasses your own legal obligations.",
-      "default": true
     }
   }
 }

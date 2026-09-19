@@ -26,7 +26,8 @@ That is it. No dependencies to install, no API key required. It runs on Windows,
 macOS and Linux, because every script is zero-dependency Node.
 
 > An optional free [NVD API key](https://nvd.nist.gov/developers/request-an-api-key)
-> raises the CVE lookup rate limit. Set it in the plugin config if you have one.
+> raises the CVE lookup rate limit. Set it in the plugin config, or export
+> `NVD_API_KEY`, if you have one.
 
 ## Use
 
@@ -51,7 +52,7 @@ its own:
 | `/security-audit:cloud` | Terraform, Kubernetes, cloud posture (CIS-aligned). |
 | `/security-audit:deps` | Supply chain — vulnerable dependencies, ranked by exploitability. |
 | `/security-audit:secrets` | Committed credentials, plus the correct leak response. |
-| `/security-audit:llm` | Prompt injection and agentic risk (OWASP GenAI 2026). |
+| `/security-audit:llm` | Prompt injection and agentic risk (OWASP GenAI 2025). |
 | `/security-audit:network` | Network and Wi-Fi assessment (scope-gated). |
 | `/security-audit:scope` | Define rules of engagement before any active testing. |
 | `/security-audit:report` | Regenerate the report from the current findings. |
@@ -113,8 +114,8 @@ CSV for your tracker.
 ## Standards it speaks
 
 OWASP **Top 10 2025**, **API Top 10 2023**, **ASVS 5.0**, **WSTG 4.2**, **MASVS
-2.1 / MASTG 2.0**, **GenAI LLM Top 10 2026**, **Agentic Top 10**, and **CI/CD Top
-10** · MITRE **ATT&CK v19**, **CWE Top 25 (2025)**, **CAPEC** · **CVSS v3.1 and
+2.1 / MASTG 2.0**, **GenAI LLM Top 10 2025**, **Agentic Top 10**, and **CI/CD Top
+10** · MITRE **ATT&CK v19**, **CWE Top 25 (2025)** · **CVSS v3.1 and
 v4.0** · **EPSS** · **CISA KEV** · **NIST CSF 2.0** and **SP 800-115** · **CIS
 Controls v8.1** and Benchmarks · **PCI DSS 4.0.1**, **ISO 27001:2022**, **SOC 2**.
 

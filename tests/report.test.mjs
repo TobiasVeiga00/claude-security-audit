@@ -215,3 +215,46 @@ test('markdown code fences survive backticks inside evidence', () => {
   const md = renderMarkdown(buildModel(store.load(), { scope: null, meta: {} }));
   assert.ok(md.includes('````'), 'nested fences require a longer outer fence');
 });
+
+/* ------------------------------------------------------------------ *
+ * Report-hardening regressions (Fable report/docs audit).
+ * ------------------------------------------------------------------ */
+
+test('markdown neutralises block-injection and non-http references', () => {
+  const { store } = seed();
+  store.add([{
+    title: 'MD probe', severity: 'high', domain: 'code', cwe: 89,
+    location: { file: 'a.js', symbol: 'p' },
+    description: 'fine line\n## Injected heading\n- injected list item',
+    remediation: { summary: 'do it', references: ['javascript:alert(1)', 'https://good.example/fix'] },
+    source: { tool: 'fixture', rule: 'md.probe' },
+  }], { scanId: 'scan-test' });
+  const md = renderMarkdown(buildModel(store.load(), { scope: null, meta: {} }));
+  assert.ok(!/\n## Injected heading/.test(md), 'a heading in a description must not inject a section');
+  assert.ok(!md.includes('javascript:alert'), 'a non-http reference must not be rendered');
+  assert.ok(md.includes('https://good.example/fix'), 'an http reference is kept');
+});
+
+test('the HTML report never emits a javascript: href', () => {
+  const { store } = seed();
+  store.add([{
+    title: 'href probe', severity: 'medium', domain: 'web', cwe: 79,
+    location: { url: 'https://x/y', parameter: 'q' }, description: 'x',
+    remediation: { summary: 'y', references: ['javascript:alert(1)'] },
+    source: { tool: 'fixture', rule: 'href.probe' },
+  }], { scanId: 'scan-test' });
+  const html = renderHtml(buildModel(store.load(), { scope: null, meta: {} }));
+  assert.ok(!html.includes('href="javascript:'));
+});
+
+test('SARIF gives a shared CWE rule generic metadata, not one finding title', () => {
+  const { store } = seed();
+  store.add([
+    { title: 'First injection here', severity: 'high', domain: 'code', cwe: 89, location: { file: 'a.js', symbol: 'a' }, description: 'first', source: { tool: '', rule: '' } },
+    { title: 'Totally different second', severity: 'low', domain: 'code', cwe: 89, location: { file: 'b.js', symbol: 'b' }, description: 'second', source: { tool: '', rule: '' } },
+  ], { scanId: 'scan-test' });
+  const sarif = renderSarif(buildModel(store.load(), { scope: null, meta: {} }), '1.0.1');
+  const rule = sarif.runs[0].tool.driver.rules.find((r) => r.id === 'CWE-89');
+  assert.equal(rule.name, 'CWE-89 weakness', 'the rule name is generic, not a specific finding title');
+  assert.equal(sarif.runs[0].results.filter((r) => r.ruleId === 'CWE-89').length, 2);
+});

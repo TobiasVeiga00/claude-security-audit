@@ -21,7 +21,7 @@ those, not from a fresh search.
 
 ## Focus
 
-Anchor to OWASP GenAI Top 10 2026 and Agentic Top 10. Map untrusted-text entry points and model authority first; a prompt-injection finding is only as severe as the reachable authority.
+Anchor to OWASP GenAI LLM Top 10 2025 and the Agentic Top 10. Map untrusted-text entry points and model authority first; a prompt-injection finding is only as severe as the reachable authority.
 
 Fill all five slots of the boundary contract — actor, input, control, crossing,
 result — or it is not a finding. A missing control is usually one layer up; read

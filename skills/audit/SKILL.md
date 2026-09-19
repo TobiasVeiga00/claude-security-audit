@@ -63,7 +63,7 @@ One deterministic pass replaces reading the repository:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" <target> \
-  --budget <token_budget> --json .security-audit/surface.json --summary
+  --budget ${user_config.token_budget} --json .security-audit/surface.json --summary
 ```
 
 Report the reduction to the user in one line — it is the clearest signal that

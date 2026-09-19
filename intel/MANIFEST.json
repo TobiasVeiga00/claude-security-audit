@@ -1,16 +1,92 @@
 {
-  "generatedAt": "2026-09-19T03:44:32.677Z",
+  "generatedAt": "2026-09-19T04:00:10.053Z",
   "sources": {
     "kev": {
       "count": 1716,
       "version": "2026.09.18"
+    },
+    "attack": {
+      "domains": {
+        "enterprise-attack": {
+          "version": "19.2",
+          "techniques": 697
+        },
+        "mobile-attack": {
+          "version": "19.2",
+          "techniques": 124
+        },
+        "ics-attack": {
+          "version": "19.2",
+          "techniques": 97
+        }
+      },
+      "version": "19.2"
+    },
+    "cwe": {
+      "version": "4.20",
+      "entries": 25,
+      "resolved": 25
+    },
+    "cvss": {
+      "macrovectors": 270
+    },
+    "frameworks": {
+      "owasp-asvs": {
+        "repo": "OWASP/ASVS",
+        "version": "v5.0.0_release",
+        "releasedAt": "2025-05-30T09:35:31Z",
+        "url": "https://github.com/OWASP/ASVS/releases/tag/v5.0.0_release"
+      },
+      "owasp-mastg": {
+        "repo": "OWASP/mastg",
+        "version": "v2.0.0",
+        "releasedAt": "2026-06-30T07:08:28Z",
+        "url": "https://github.com/OWASP/mastg/releases/tag/v2.0.0"
+      },
+      "owasp-masvs": {
+        "repo": "OWASP/masvs",
+        "version": "v2.1.0",
+        "releasedAt": "2024-01-18T11:15:29Z",
+        "url": "https://github.com/OWASP/masvs/releases/tag/v2.1.0"
+      },
+      "owasp-wstg": {
+        "repo": "OWASP/wstg",
+        "version": "v4.2",
+        "releasedAt": "2020-12-03T15:23:44Z",
+        "url": "https://github.com/OWASP/wstg/releases/tag/v4.2"
+      },
+      "nuclei-templates": {
+        "repo": "projectdiscovery/nuclei-templates",
+        "version": "v10.4.9",
+        "releasedAt": "2026-09-16T14:58:45Z",
+        "url": "https://github.com/projectdiscovery/nuclei-templates/releases/tag/v10.4.9"
+      },
+      "owasp-top10": {
+        "repo": "OWASP/Top10",
+        "version": "2025",
+        "detectedBy": "directory"
+      },
+      "nuclei-template-stats": {
+        "total": 13535,
+        "bySeverity": {
+          "info": 5129,
+          "high": 3007,
+          "medium": 2855,
+          "critical": 1967,
+          "low": 519,
+          "unknown": 58
+        }
+      }
     }
   },
   "failures": [],
   "checksums": {
+    "attack/enterprise-attack.json": "f40f0a609f8f0bbf",
+    "attack/ics-attack.json": "c3fda917f412118b",
+    "attack/mobile-attack.json": "aab34c3b06a6cea4",
     "cvss/v4-tables.json": "593e675715b2307f",
-    "cwe/top25.json": "8d61a39b5e23978c",
-    "frameworks.json": "10550f71267ed343",
+    "cwe/top25.json": "91f4fb645356b599",
+    "frameworks.json": "7cdda3201d6cbeb7",
     "kev/catalog.json": "6878c40abad827e5",
     "kev/index.json": "70cf6f86f35c5421"
   }

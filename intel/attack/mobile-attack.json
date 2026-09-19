@@ -1,0 +1,1518 @@
+{
+  "source": "MITRE ATT&CK",
+  "notice": "(c) 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation.",
+  "domain": "mobile-attack",
+  "version": "19.2",
+  "tactics": [
+    {
+      "id": "TA0027",
+      "name": "Initial Access"
+    },
+    {
+      "id": "TA0028",
+      "name": "Persistence"
+    },
+    {
+      "id": "TA0029",
+      "name": "Privilege Escalation"
+    },
+    {
+      "id": "TA0030",
+      "name": "Defense Evasion"
+    },
+    {
+      "id": "TA0031",
+      "name": "Credential Access"
+    },
+    {
+      "id": "TA0032",
+      "name": "Discovery"
+    },
+    {
+      "id": "TA0033",
+      "name": "Lateral Movement"
+    },
+    {
+      "id": "TA0034",
+      "name": "Impact"
+    },
+    {
+      "id": "TA0035",
+      "name": "Collection"
+    },
+    {
+      "id": "TA0036",
+      "name": "Exfiltration"
+    },
+    {
+      "id": "TA0037",
+      "name": "Command and Control"
+    },
+    {
+      "id": "TA0038",
+      "name": "Network Effects"
+    },
+    {
+      "id": "TA0039",
+      "name": "Remote Service Effects"
+    },
+    {
+      "id": "TA0041",
+      "name": "Execution"
+    }
+  ],
+  "techniqueCount": 124,
+  "techniques": [
+    {
+      "id": "T1398",
+      "name": "Boot or Logon Initialization Scripts",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use scripts automatically executed at boot or logon initialization to establish persistence.",
+      "url": "https://attack.mitre.org/techniques/T1398"
+    },
+    {
+      "id": "T1404",
+      "name": "Exploitation for Privilege Escalation",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may exploit software vulnerabilities in order to elevate privileges.",
+      "url": "https://attack.mitre.org/techniques/T1404"
+    },
+    {
+      "id": "T1406",
+      "name": "Obfuscated Files or Information",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to make a payload or file difficult to discover or analyze by encrypting, encoding, or otherwise obfuscating its contents on the device or in transit.",
+      "url": "https://attack.mitre.org/techniques/T1406"
+    },
+    {
+      "id": "T1406.001",
+      "name": "Steganography",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may use steganography techniques in order to prevent the detection of hidden information.",
+      "url": "https://attack.mitre.org/techniques/T1406/001"
+    },
+    {
+      "id": "T1406.002",
+      "name": "Software Packing",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may perform software packing to conceal their code.",
+      "url": "https://attack.mitre.org/techniques/T1406/002"
+    },
+    {
+      "id": "T1407",
+      "name": "Download New Code at Runtime",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may download and execute dynamic code not included in the original application package after installation.",
+      "url": "https://attack.mitre.org/techniques/T1407"
+    },
+    {
+      "id": "T1409",
+      "name": "Stored Application Data",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may try to access and collect application data resident on the device.",
+      "url": "https://attack.mitre.org/techniques/T1409"
+    },
+    {
+      "id": "T1414",
+      "name": "Clipboard Data",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may abuse clipboard manager APIs to obtain sensitive information copied to the device clipboard.",
+      "url": "https://attack.mitre.org/techniques/T1414"
+    },
+    {
+      "id": "T1417",
+      "name": "Input Capture",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use methods of capturing user input to obtain credentials or collect information.",
+      "url": "https://attack.mitre.org/techniques/T1417"
+    },
+    {
+      "id": "T1417.001",
+      "name": "Keylogging",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may log user keystrokes to intercept credentials or other information from the user as the user types them.",
+      "url": "https://attack.mitre.org/techniques/T1417/001"
+    },
+    {
+      "id": "T1417.002",
+      "name": "GUI Input Capture",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may mimic common operating system GUI components to prompt users for sensitive information with a seemingly legitimate prompt.",
+      "url": "https://attack.mitre.org/techniques/T1417/002"
+    },
+    {
+      "id": "T1418",
+      "name": "Software Discovery",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to get a listing of applications that are installed on a device.",
+      "url": "https://attack.mitre.org/techniques/T1418"
+    },
+    {
+      "id": "T1418.001",
+      "name": "Security Software Discovery",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to get a listing of security applications and configurations that are installed on a device.",
+      "url": "https://attack.mitre.org/techniques/T1418/001"
+    },
+    {
+      "id": "T1420",
+      "name": "File and Directory Discovery",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may enumerate files and directories or search in specific device locations for desired information within a filesystem.",
+      "url": "https://attack.mitre.org/techniques/T1420"
+    },
+    {
+      "id": "T1421",
+      "name": "System Network Connections Discovery",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may attempt to get a listing of network connections to or from the compromised device they are currently accessing or from remote systems by querying for information over the network.",
+      "url": "https://attack.mitre.org/techniques/T1421"
+    },
+    {
+      "id": "T1422",
+      "name": "System Network Configuration Discovery",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may look for details about the network configuration and settings, such as IP and/or MAC addresses, of devices they access or through information discovery of remote systems.",
+      "url": "https://attack.mitre.org/techniques/T1422"
+    },
+    {
+      "id": "T1422.001",
+      "name": "Internet Connection Discovery",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may check for Internet connectivity on compromised systems.",
+      "url": "https://attack.mitre.org/techniques/T1422/001"
+    },
+    {
+      "id": "T1422.002",
+      "name": "Wi-Fi Discovery",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may search for information about Wi-Fi networks, such as network names and passwords, on compromised systems.",
+      "url": "https://attack.mitre.org/techniques/T1422/002"
+    },
+    {
+      "id": "T1423",
+      "name": "Network Service Scanning",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to get a listing of services running on remote hosts, including those that may be vulnerable to remote software exploitation.",
+      "url": "https://attack.mitre.org/techniques/T1423"
+    },
+    {
+      "id": "T1424",
+      "name": "Process Discovery",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to get information about running processes on a device.",
+      "url": "https://attack.mitre.org/techniques/T1424"
+    },
+    {
+      "id": "T1426",
+      "name": "System Information Discovery",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to get detailed information about a device’s operating system and hardware, including versions, patches, and architecture.",
+      "url": "https://attack.mitre.org/techniques/T1426"
+    },
+    {
+      "id": "T1428",
+      "name": "Exploitation of Remote Services",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may exploit remote services of enterprise servers, workstations, or other resources to gain unauthorized access to internal systems once inside of a network.",
+      "url": "https://attack.mitre.org/techniques/T1428"
+    },
+    {
+      "id": "T1429",
+      "name": "Audio Capture",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may capture audio to collect information by leveraging standard operating system APIs of a mobile device.",
+      "url": "https://attack.mitre.org/techniques/T1429"
+    },
+    {
+      "id": "T1430",
+      "name": "Location Tracking",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may track a device’s physical location through use of standard operating system APIs via malicious or exploited applications on the compromised device.",
+      "url": "https://attack.mitre.org/techniques/T1430"
+    },
+    {
+      "id": "T1430.001",
+      "name": "Remote Device Management Services",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "An adversary may use access to cloud services (e.g.",
+      "url": "https://attack.mitre.org/techniques/T1430/001"
+    },
+    {
+      "id": "T1430.002",
+      "name": "Impersonate SS7 Nodes",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may exploit the lack of authentication in signaling system network nodes to track the location of mobile devices by impersonating a node.",
+      "url": "https://attack.mitre.org/techniques/T1430/002"
+    },
+    {
+      "id": "T1437",
+      "name": "Application Layer Protocol",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may communicate using application layer protocols to avoid detection/network filtering by blending in with existing traffic.",
+      "url": "https://attack.mitre.org/techniques/T1437"
+    },
+    {
+      "id": "T1437.001",
+      "name": "Web Protocols",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may communicate using application layer protocols associated with web protocols traffic to avoid detection/network filtering by blending in with existing traffic.",
+      "url": "https://attack.mitre.org/techniques/T1437/001"
+    },
+    {
+      "id": "T1451",
+      "name": "SIM Card Swap",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may gain access to mobile devices through transfers or swaps from victims’ phone numbers to adversary-controlled SIM cards and mobile devices.",
+      "url": "https://attack.mitre.org/techniques/T1451"
+    },
+    {
+      "id": "T1453",
+      "name": "Abuse Accessibility Features",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may abuse accessibility features in Android devices to steal sensitive data and to spread malware to other devices.",
+      "url": "https://attack.mitre.org/techniques/T1453"
+    },
+    {
+      "id": "T1456",
+      "name": "Drive-By Compromise",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may gain access to a system through a user visiting a website over the normal course of browsing.",
+      "url": "https://attack.mitre.org/techniques/T1456"
+    },
+    {
+      "id": "T1458",
+      "name": "Replication Through Removable Media",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may move onto devices by exploiting or copying malware to devices connected via USB.",
+      "url": "https://attack.mitre.org/techniques/T1458"
+    },
+    {
+      "id": "T1461",
+      "name": "Lockscreen Bypass",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "An adversary with physical access to a mobile device may seek to bypass the device’s lockscreen.",
+      "url": "https://attack.mitre.org/techniques/T1461"
+    },
+    {
+      "id": "T1464",
+      "name": "Network Denial of Service",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may perform Network Denial of Service (DoS) attacks to degrade or block the availability of targeted resources to users.",
+      "url": "https://attack.mitre.org/techniques/T1464"
+    },
+    {
+      "id": "T1471",
+      "name": "Data Encrypted for Impact",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "An adversary may encrypt files stored on a mobile device to prevent the user from accessing them.",
+      "url": "https://attack.mitre.org/techniques/T1471"
+    },
+    {
+      "id": "T1474",
+      "name": "Supply Chain Compromise",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may manipulate products or product delivery mechanisms prior to receipt by a final consumer for the purpose of data or system compromise.",
+      "url": "https://attack.mitre.org/techniques/T1474"
+    },
+    {
+      "id": "T1474.001",
+      "name": "Compromise Software Dependencies and Development Tools",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may manipulate products or product delivery mechanisms prior to receipt by a final consumer for the purpose of data or system compromise.",
+      "url": "https://attack.mitre.org/techniques/T1474/001"
+    },
+    {
+      "id": "T1474.002",
+      "name": "Compromise Hardware Supply Chain",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may manipulate hardware components in products prior to receipt by a final consumer for the purpose of data or system compromise.",
+      "url": "https://attack.mitre.org/techniques/T1474/002"
+    },
+    {
+      "id": "T1474.003",
+      "name": "Compromise Software Supply Chain",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may manipulate application software prior to receipt by a final consumer for the purpose of data or system compromise.",
+      "url": "https://attack.mitre.org/techniques/T1474/003"
+    },
+    {
+      "id": "T1481",
+      "name": "Web Service",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use an existing, legitimate external Web service as a means for relaying data to/from a compromised system.",
+      "url": "https://attack.mitre.org/techniques/T1481"
+    },
+    {
+      "id": "T1481.001",
+      "name": "Dead Drop Resolver",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use an existing, legitimate external Web service to host information that points to additional command and control (C2) infrastructure.",
+      "url": "https://attack.mitre.org/techniques/T1481/001"
+    },
+    {
+      "id": "T1481.002",
+      "name": "Bidirectional Communication",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use an existing, legitimate external Web service channel as a means for sending commands to and receiving output from a compromised system.",
+      "url": "https://attack.mitre.org/techniques/T1481/002"
+    },
+    {
+      "id": "T1481.003",
+      "name": "One-Way Communication",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use an existing, legitimate external Web service channel as a means for sending commands to a compromised system without receiving return output.",
+      "url": "https://attack.mitre.org/techniques/T1481/003"
+    },
+    {
+      "id": "T1509",
+      "name": "Non-Standard Port",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may generate network traffic using a protocol and port pairing that are typically not associated.",
+      "url": "https://attack.mitre.org/techniques/T1509"
+    },
+    {
+      "id": "T1512",
+      "name": "Video Capture",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "An adversary can leverage a device’s cameras to gather information by capturing video recordings.",
+      "url": "https://attack.mitre.org/techniques/T1512"
+    },
+    {
+      "id": "T1513",
+      "name": "Screen Capture",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may use screen capture to collect additional information about a target device, such as applications running in the foreground, user data, credentials, or other sensitive information.",
+      "url": "https://attack.mitre.org/techniques/T1513"
+    },
+    {
+      "id": "T1516",
+      "name": "Input Injection",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "A malicious application can inject input to the user interface to mimic user interaction through the abuse of Android's accessibility APIs.",
+      "url": "https://attack.mitre.org/techniques/T1516"
+    },
+    {
+      "id": "T1517",
+      "name": "Access Notifications",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may collect data within notifications sent by the operating system or other applications.",
+      "url": "https://attack.mitre.org/techniques/T1517"
+    },
+    {
+      "id": "T1521",
+      "name": "Encrypted Channel",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may explicitly employ a known encryption algorithm to conceal command and control traffic rather than relying on any inherent protections provided by a communication protocol.",
+      "url": "https://attack.mitre.org/techniques/T1521"
+    },
+    {
+      "id": "T1521.001",
+      "name": "Symmetric Cryptography",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may employ a known symmetric encryption algorithm to conceal command and control traffic, rather than relying on any inherent protections provided by a communication protocol.",
+      "url": "https://attack.mitre.org/techniques/T1521/001"
+    },
+    {
+      "id": "T1521.002",
+      "name": "Asymmetric Cryptography",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may employ a known asymmetric encryption algorithm to conceal command and control traffic, rather than relying on any inherent protections provided by a communication protocol.",
+      "url": "https://attack.mitre.org/techniques/T1521/002"
+    },
+    {
+      "id": "T1521.003",
+      "name": "SSL Pinning",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use [SSL Pinning](https://attack.mitre.org/techniques/T1521/003) to protect the C2 traffic from being intercepted and analyzed.",
+      "url": "https://attack.mitre.org/techniques/T1521/003"
+    },
+    {
+      "id": "T1532",
+      "name": "Archive Collected Data",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may compress and/or encrypt data that is collected prior to exfiltration.",
+      "url": "https://attack.mitre.org/techniques/T1532"
+    },
+    {
+      "id": "T1533",
+      "name": "Data from Local System",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may search local system sources, such as file systems or local databases, to find files of interest and sensitive data prior to exfiltration.",
+      "url": "https://attack.mitre.org/techniques/T1533"
+    },
+    {
+      "id": "T1541",
+      "name": "Foreground Persistence",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may abuse Android's `startForeground()` API method to maintain continuous sensor access.",
+      "url": "https://attack.mitre.org/techniques/T1541"
+    },
+    {
+      "id": "T1544",
+      "name": "Ingress Tool Transfer",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may transfer tools or other files from an external system onto a compromised device to facilitate follow-on actions.",
+      "url": "https://attack.mitre.org/techniques/T1544"
+    },
+    {
+      "id": "T1575",
+      "name": "Native API",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may use Android’s Native Development Kit (NDK) to write native functions that can achieve execution of binaries or functions.",
+      "url": "https://attack.mitre.org/techniques/T1575"
+    },
+    {
+      "id": "T1577",
+      "name": "Compromise Application Executable",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may modify applications installed on a device to establish persistent access to a victim.",
+      "url": "https://attack.mitre.org/techniques/T1577"
+    },
+    {
+      "id": "T1582",
+      "name": "SMS Control",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may delete, alter, or send SMS messages without user authorization.",
+      "url": "https://attack.mitre.org/techniques/T1582"
+    },
+    {
+      "id": "T1603",
+      "name": "Scheduled Task/Job",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may abuse task scheduling functionality to facilitate initial or recurring execution of malicious code.",
+      "url": "https://attack.mitre.org/techniques/T1603"
+    },
+    {
+      "id": "T1604",
+      "name": "Proxy Through Victim",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may use a compromised device as a proxy server to the Internet.",
+      "url": "https://attack.mitre.org/techniques/T1604"
+    },
+    {
+      "id": "T1616",
+      "name": "Call Control",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may make, forward, or block phone calls without user authorization.",
+      "url": "https://attack.mitre.org/techniques/T1616"
+    },
+    {
+      "id": "T1617",
+      "name": "Hooking",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may utilize hooking to hide the presence of artifacts associated with their behaviors to evade detection.",
+      "url": "https://attack.mitre.org/techniques/T1617"
+    },
+    {
+      "id": "T1623",
+      "name": "Command and Scripting Interpreter",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may abuse command and script interpreters to execute commands, scripts, or binaries.",
+      "url": "https://attack.mitre.org/techniques/T1623"
+    },
+    {
+      "id": "T1623.001",
+      "name": "Unix Shell",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may abuse Unix shell commands and scripts for execution.",
+      "url": "https://attack.mitre.org/techniques/T1623/001"
+    },
+    {
+      "id": "T1624",
+      "name": "Event Triggered Execution",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may establish persistence using system mechanisms that trigger execution based on specific events.",
+      "url": "https://attack.mitre.org/techniques/T1624"
+    },
+    {
+      "id": "T1624.001",
+      "name": "Broadcast Receivers",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may establish persistence using system mechanisms that trigger execution based on specific events.",
+      "url": "https://attack.mitre.org/techniques/T1624/001"
+    },
+    {
+      "id": "T1625",
+      "name": "Hijack Execution Flow",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may execute their own malicious payloads by hijacking the way operating systems run applications.",
+      "url": "https://attack.mitre.org/techniques/T1625"
+    },
+    {
+      "id": "T1625.001",
+      "name": "System Runtime API Hijacking",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may execute their own malicious payloads by hijacking the way an operating system runs applications.",
+      "url": "https://attack.mitre.org/techniques/T1625/001"
+    },
+    {
+      "id": "T1626",
+      "name": "Abuse Elevation Control Mechanism",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may circumvent mechanisms designed to control elevated privileges to gain higher-level permissions.",
+      "url": "https://attack.mitre.org/techniques/T1626"
+    },
+    {
+      "id": "T1626.001",
+      "name": "Device Administrator Permissions",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may abuse Android’s device administration API to obtain a higher degree of control over the device.",
+      "url": "https://attack.mitre.org/techniques/T1626/001"
+    },
+    {
+      "id": "T1627",
+      "name": "Execution Guardrails",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use execution guardrails to constrain execution or actions based on adversary supplied and environment specific conditions that are expected to be present on the target.",
+      "url": "https://attack.mitre.org/techniques/T1627"
+    },
+    {
+      "id": "T1627.001",
+      "name": "Geofencing",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use a device’s geographical location to limit certain malicious behaviors.",
+      "url": "https://attack.mitre.org/techniques/T1627/001"
+    },
+    {
+      "id": "T1628",
+      "name": "Hide Artifacts",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may attempt to hide artifacts associated with their behaviors to evade detection.",
+      "url": "https://attack.mitre.org/techniques/T1628"
+    },
+    {
+      "id": "T1628.001",
+      "name": "Suppress Application Icon",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "A malicious application could suppress its icon from being displayed to the user in the application launcher.",
+      "url": "https://attack.mitre.org/techniques/T1628/001"
+    },
+    {
+      "id": "T1628.002",
+      "name": "User Evasion",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may attempt to avoid detection by hiding malicious behavior from the user.",
+      "url": "https://attack.mitre.org/techniques/T1628/002"
+    },
+    {
+      "id": "T1628.003",
+      "name": "Conceal Multimedia Files",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may attempt to hide multimedia files from the user.",
+      "url": "https://attack.mitre.org/techniques/T1628/003"
+    },
+    {
+      "id": "T1629",
+      "name": "Impair Defenses",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may maliciously modify components of a victim environment in order to hinder or disable defensive mechanisms.",
+      "url": "https://attack.mitre.org/techniques/T1629"
+    },
+    {
+      "id": "T1629.001",
+      "name": "Prevent Application Removal",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may abuse the Android device administration API to prevent the user from uninstalling a target application.",
+      "url": "https://attack.mitre.org/techniques/T1629/001"
+    },
+    {
+      "id": "T1629.002",
+      "name": "Device Lockout",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "An adversary may seek to inhibit user interaction by locking the legitimate user out of the device.",
+      "url": "https://attack.mitre.org/techniques/T1629/002"
+    },
+    {
+      "id": "T1629.003",
+      "name": "Disable or Modify Tools",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may disable security tools to avoid potential detection of their tools and activities.",
+      "url": "https://attack.mitre.org/techniques/T1629/003"
+    },
+    {
+      "id": "T1630",
+      "name": "Indicator Removal on Host",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "iOS",
+        "Android"
+      ],
+      "summary": "Adversaries may delete, alter, or hide generated artifacts on a device, including files, jailbreak status, or the malicious application itself.",
+      "url": "https://attack.mitre.org/techniques/T1630"
+    },
+    {
+      "id": "T1630.001",
+      "name": "Uninstall Malicious Application",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may include functionality in malware that uninstalls the malicious application from the device.",
+      "url": "https://attack.mitre.org/techniques/T1630/001"
+    },
+    {
+      "id": "T1630.002",
+      "name": "File Deletion",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may wipe a device or delete individual files in order to manipulate external outcomes or hide activity.",
+      "url": "https://attack.mitre.org/techniques/T1630/002"
+    },
+    {
+      "id": "T1630.003",
+      "name": "Disguise Root/Jailbreak Indicators",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "An adversary could use knowledge of the techniques used by security software to evade detection.",
+      "url": "https://attack.mitre.org/techniques/T1630/003"
+    },
+    {
+      "id": "T1631",
+      "name": "Process Injection",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may inject code into processes in order to evade process-based defenses or even elevate privileges.",
+      "url": "https://attack.mitre.org/techniques/T1631"
+    },
+    {
+      "id": "T1631.001",
+      "name": "Ptrace System Calls",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may inject malicious code into processes via ptrace (process trace) system calls in order to evade process-based defenses as well as possibly elevate privileges.",
+      "url": "https://attack.mitre.org/techniques/T1631/001"
+    },
+    {
+      "id": "T1632",
+      "name": "Subvert Trust Controls",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may undermine security controls that will either warn users of untrusted activity or prevent execution of untrusted applications.",
+      "url": "https://attack.mitre.org/techniques/T1632"
+    },
+    {
+      "id": "T1632.001",
+      "name": "Code Signing Policy Modification",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may modify code signing policies to enable execution of applications signed with unofficial or unknown keys.",
+      "url": "https://attack.mitre.org/techniques/T1632/001"
+    },
+    {
+      "id": "T1633",
+      "name": "Virtualization/Sandbox Evasion",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may employ various means to detect and avoid virtualization and analysis environments.",
+      "url": "https://attack.mitre.org/techniques/T1633"
+    },
+    {
+      "id": "T1633.001",
+      "name": "System Checks",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may employ various system checks to detect and avoid virtualization and analysis environments.",
+      "url": "https://attack.mitre.org/techniques/T1633/001"
+    },
+    {
+      "id": "T1634",
+      "name": "Credentials from Password Store",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "iOS"
+      ],
+      "summary": "Adversaries may search common password storage locations to obtain user credentials.",
+      "url": "https://attack.mitre.org/techniques/T1634"
+    },
+    {
+      "id": "T1634.001",
+      "name": "Keychain",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "iOS"
+      ],
+      "summary": "Adversaries may collect keychain data from an iOS device to acquire credentials.",
+      "url": "https://attack.mitre.org/techniques/T1634/001"
+    },
+    {
+      "id": "T1635",
+      "name": "Steal Application Access Token",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries can steal user application access tokens as a means of acquiring credentials to access remote systems and resources.",
+      "url": "https://attack.mitre.org/techniques/T1635"
+    },
+    {
+      "id": "T1635.001",
+      "name": "URI Hijacking",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may register Uniform Resource Identifiers (URIs) to intercept sensitive data.",
+      "url": "https://attack.mitre.org/techniques/T1635/001"
+    },
+    {
+      "id": "T1636",
+      "name": "Protected User Data",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may utilize standard operating system APIs to collect data from permission-backed data stores on a device, such as the calendar or contact list.",
+      "url": "https://attack.mitre.org/techniques/T1636"
+    },
+    {
+      "id": "T1636.001",
+      "name": "Calendar Entries",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may utilize standard operating system APIs to gather calendar entry data.",
+      "url": "https://attack.mitre.org/techniques/T1636/001"
+    },
+    {
+      "id": "T1636.002",
+      "name": "Call Log",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may utilize standard operating system APIs to gather call log data.",
+      "url": "https://attack.mitre.org/techniques/T1636/002"
+    },
+    {
+      "id": "T1636.003",
+      "name": "Contact List",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may utilize standard operating system APIs to gather contact list data.",
+      "url": "https://attack.mitre.org/techniques/T1636/003"
+    },
+    {
+      "id": "T1636.004",
+      "name": "SMS Messages",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may utilize standard operating system APIs to gather SMS messages.",
+      "url": "https://attack.mitre.org/techniques/T1636/004"
+    },
+    {
+      "id": "T1636.005",
+      "name": "Accounts",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may utilize standard operating system APIs to gather account data.",
+      "url": "https://attack.mitre.org/techniques/T1636/005"
+    },
+    {
+      "id": "T1637",
+      "name": "Dynamic Resolution",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may dynamically establish connections to command and control infrastructure to evade common detections and remediations.",
+      "url": "https://attack.mitre.org/techniques/T1637"
+    },
+    {
+      "id": "T1637.001",
+      "name": "Domain Generation Algorithms",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use [Domain Generation Algorithms](https://attack.mitre.org/techniques/T1637/001) (DGAs) to procedurally generate domain names for uses such as command and control communication or malicious application distribution.",
+      "url": "https://attack.mitre.org/techniques/T1637/001"
+    },
+    {
+      "id": "T1638",
+      "name": "Adversary-in-the-Middle",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to position themselves between two or more networked devices to support follow-on behaviors such as [Transmitted Data Manipulation](https://attack.mitre.org/techniques/T1565/002) or [Endpoint Denial of Service](https://attack.mitre.org/techniques/T1642).",
+      "url": "https://attack.mitre.org/techniques/T1638"
+    },
+    {
+      "id": "T1639",
+      "name": "Exfiltration Over Alternative Protocol",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may steal data by exfiltrating it over a different protocol than that of the existing command and control channel.",
+      "url": "https://attack.mitre.org/techniques/T1639"
+    },
+    {
+      "id": "T1639.001",
+      "name": "Exfiltration Over Unencrypted Non-C2 Protocol",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may steal data by exfiltrating it over an un-encrypted network protocol other than that of the existing command and control channel.",
+      "url": "https://attack.mitre.org/techniques/T1639/001"
+    },
+    {
+      "id": "T1640",
+      "name": "Account Access Removal",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may interrupt availability of system and network resources by inhibiting access to accounts utilized by legitimate users.",
+      "url": "https://attack.mitre.org/techniques/T1640"
+    },
+    {
+      "id": "T1641",
+      "name": "Data Manipulation",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may insert, delete, or alter data in order to manipulate external outcomes or hide activity.",
+      "url": "https://attack.mitre.org/techniques/T1641"
+    },
+    {
+      "id": "T1641.001",
+      "name": "Transmitted Data Manipulation",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may alter data en route to storage or other systems in order to manipulate external outcomes or hide activity.",
+      "url": "https://attack.mitre.org/techniques/T1641/001"
+    },
+    {
+      "id": "T1642",
+      "name": "Endpoint Denial of Service",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may perform Endpoint Denial of Service (DoS) attacks to degrade or block the availability of services to users.",
+      "url": "https://attack.mitre.org/techniques/T1642"
+    },
+    {
+      "id": "T1643",
+      "name": "Generate Traffic from Victim",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may generate outbound traffic from devices.",
+      "url": "https://attack.mitre.org/techniques/T1643"
+    },
+    {
+      "id": "T1644",
+      "name": "Out of Band Data",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may communicate with compromised devices using out of band data streams.",
+      "url": "https://attack.mitre.org/techniques/T1644"
+    },
+    {
+      "id": "T1645",
+      "name": "Compromise Client Software Binary",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may modify system software binaries to establish persistent access to devices.",
+      "url": "https://attack.mitre.org/techniques/T1645"
+    },
+    {
+      "id": "T1646",
+      "name": "Exfiltration Over C2 Channel",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may steal data by exfiltrating it over an existing command and control channel.",
+      "url": "https://attack.mitre.org/techniques/T1646"
+    },
+    {
+      "id": "T1655",
+      "name": "Masquerading",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may attempt to manipulate features of their artifacts to make them appear legitimate or benign to users and/or security tools.",
+      "url": "https://attack.mitre.org/techniques/T1655"
+    },
+    {
+      "id": "T1655.001",
+      "name": "Match Legitimate Name or Location",
+      "subtechnique": true,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may match or approximate the name or location of legitimate files or resources when naming/placing them.",
+      "url": "https://attack.mitre.org/techniques/T1655/001"
+    },
+    {
+      "id": "T1658",
+      "name": "Exploitation for Client Execution",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may exploit software vulnerabilities in client applications to execute code.",
+      "url": "https://attack.mitre.org/techniques/T1658"
+    },
+    {
+      "id": "T1660",
+      "name": "Phishing",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may send malicious content to users in order to gain access to their mobile devices.",
+      "url": "https://attack.mitre.org/techniques/T1660"
+    },
+    {
+      "id": "T1661",
+      "name": "Application Versioning",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "An adversary may push an update to a previously benign application to add malicious code.",
+      "url": "https://attack.mitre.org/techniques/T1661"
+    },
+    {
+      "id": "T1662",
+      "name": "Data Destruction",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may destroy data and files on specific devices or in large numbers to interrupt availability to systems, services, and network resources.",
+      "url": "https://attack.mitre.org/techniques/T1662"
+    },
+    {
+      "id": "T1663",
+      "name": "Remote Access Software",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may use legitimate remote access software, such as `VNC`, `TeamViewer`, `AirDroid`, `AirMirror`, etc., to establish an interactive command and control channel to target mobile devices.",
+      "url": "https://attack.mitre.org/techniques/T1663"
+    },
+    {
+      "id": "T1664",
+      "name": "Exploitation for Initial Access",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may exploit software vulnerabilities to gain initial access to a mobile device.",
+      "url": "https://attack.mitre.org/techniques/T1664"
+    },
+    {
+      "id": "T1670",
+      "name": "Virtualization Solution",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android"
+      ],
+      "summary": "Adversaries may carry out malicious operations using virtualization solutions to escape from Android sandboxes and to avoid detection.",
+      "url": "https://attack.mitre.org/techniques/T1670"
+    },
+    {
+      "id": "T1676",
+      "name": "Linked Devices",
+      "subtechnique": false,
+      "tactics": [],
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "summary": "Adversaries may abuse the “linked devices” feature on messaging applications, such as Signal and WhatsApp, to register the user’s account to an adversary-controlled device.",
+      "url": "https://attack.mitre.org/techniques/T1676"
+    }
+  ]
+}

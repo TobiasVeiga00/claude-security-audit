@@ -5,6 +5,15 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.4.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.3.1...v1.4.0) (2026-09-19)
+
+
+### Features
+
+* close quality-parity gaps vs flagship auditors ([#28](https://github.com/TobiasVeiga00/claude-security-audit/issues/28)) ([c8f6eef](https://github.com/TobiasVeiga00/claude-security-audit/commit/c8f6eef9a6f6a016992a8f2514e3076de04fceb0))
+* **ledger:** committed .auditignore suppressions with fingerprint inheritance ([#27](https://github.com/TobiasVeiga00/claude-security-audit/issues/27)) ([9118b86](https://github.com/TobiasVeiga00/claude-security-audit/commit/9118b8633e0347dd8e9f4ed73004f0c65542a26f))
+* **report:** OpenVEX output and a Retest + Appendix section ([#30](https://github.com/TobiasVeiga00/claude-security-audit/issues/30)) ([3b8cd4d](https://github.com/TobiasVeiga00/claude-security-audit/commit/3b8cd4d010e37373a85b859947dc13e3f8ab9510))
+
 ## [1.3.1](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.3.0...v1.3.1) (2026-09-19)
 
 

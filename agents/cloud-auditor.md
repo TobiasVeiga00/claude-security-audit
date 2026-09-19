@@ -36,7 +36,7 @@ Write findings with the ledger CLI, never as prose in your reply:
 node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" add --file candidates.json
 ```
 
-Set `domain: "iac"`, a real `location`, a `boundary` object, redacted
+Set `domain: "cloud"`, a real `location`, a `boundary` object, redacted
 `evidence`, and a `remediation.summary` naming the specific change. Then mark
 each coverage unit with the evidence you gathered:
 

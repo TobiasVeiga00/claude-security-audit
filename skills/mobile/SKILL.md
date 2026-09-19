@@ -2,7 +2,7 @@
 name: mobile
 description: Mobile application security assessment against OWASP MASVS and MASTG — insecure storage, cryptography, authentication, network trust, platform interaction, code quality, resilience and privacy, for Android and iOS. Use for "audit my Android app", "iOS security review", "MASVS assessment", "check my APK".
 argument-hint: "[path to project, APK or IPA]"
-allowed-tools: Read, Glob, Grep, Write, Bash(node:*), Bash(git:*), Bash(jadx:*), Bash(apktool:*), Bash(unzip:*), Bash(strings:*), Bash(plutil:*)
+allowed-tools: Read, Glob, Grep, Write, Bash(node:*), Bash(git:*), Bash(jadx:*), Bash(apktool:*), Bash(unzip:*), Bash(strings:*), Bash(plutil:*), Bash(frida:*), Bash(objection:*)
 ---
 
 # Mobile application security

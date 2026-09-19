@@ -2,7 +2,7 @@
 name: deps
 description: Software supply chain audit — known-vulnerable dependencies ranked by real exploitability, SBOM generation, typosquatting and install-script risk, and lockfile integrity. Use for "check my dependencies", "SCA scan", "am I affected by CVE-X", "supply chain review", "generate an SBOM".
 argument-hint: "[path]"
-allowed-tools: Read, Glob, Grep, Write, Bash(node:*), Bash(git:*), Bash(osv-scanner:*), Bash(trivy:*), Bash(grype:*), Bash(syft:*), Bash(npm:*), Bash(pip-audit:*), Bash(govulncheck:*)
+allowed-tools: Read, Glob, Grep, Write, Bash(node:*), Bash(git:*), Bash(osv-scanner:*), Bash(trivy:*), Bash(grype:*), Bash(syft:*), Bash(cdxgen:*), Bash(npm:*), Bash(pip-audit:*), Bash(govulncheck:*)
 ---
 
 # Supply chain security

@@ -5,6 +5,14 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.2.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.1.0...v1.2.0) (2026-09-19)
+
+
+### Features
+
+* **signals:** detect sinks in Rust, shell and PowerShell ([2c47c7d](https://github.com/TobiasVeiga00/claude-security-audit/commit/2c47c7dd54059115a7990086ded4e993a42faa50))
+* **signals:** detect sinks in Rust, shell and PowerShell ([4e6dede](https://github.com/TobiasVeiga00/claude-security-audit/commit/4e6dede2b541d2f9e4fe220695c58a357e11f1fe))
+
 ## [1.1.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.0.1...v1.1.0) (2026-09-19)
 
 

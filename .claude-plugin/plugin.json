@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "security-audit",
   "displayName": "Security Audit",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "End-to-end security auditing for web, API, mobile, wireless, cloud, code, secrets, dependencies, IaC, containers and LLM apps. Token-optimised attack-surface triage, deterministic CVSS scoring, live CVE/KEV/EPSS/ATT&CK intelligence, an authorization gate for intrusive testing, and professional Markdown/HTML/SARIF reporting.",
   "author": {
     "name": "Tobias Veiga",

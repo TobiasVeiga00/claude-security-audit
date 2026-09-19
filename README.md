@@ -58,6 +58,28 @@ its own:
 | `/security-audit:report` | Regenerate the report from the current findings. |
 | `/security-audit:fix` | Generate and apply remediation patches, with a safety gate. |
 
+## Staying current
+
+Update your installed copy to the latest release:
+
+```
+/plugin marketplace update claude-security-audit
+/reload-plugins
+```
+
+(or restart Claude Code). Updates arrive whenever the plugin's version is
+bumped for a release; the command above refreshes the marketplace so the newer
+version is picked up.
+
+Its threat intelligence stays fresh on two layers, so you are never auditing
+against last year's data between updates:
+
+- **Live at runtime** — EPSS exploit probability and NVD / OSV advisories are
+  fetched as the audit runs, so they are always current.
+- **Refreshed daily in the repo** — a GitHub Action re-vendors CISA KEV, MITRE
+  ATT&CK, the CWE Top 25 and the CVSS tables; you pick up the latest set each
+  time you update the plugin.
+
 ## Why it is different
 
 **It is cheap to run on a real repository.** A deterministic pass ranks your

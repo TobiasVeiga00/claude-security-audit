@@ -347,6 +347,32 @@ function chunk(list, size) {
   return out;
 }
 
+/**
+ * Materiality decides whether CI cuts a release or just refreshes data. New
+ * exploited-in-the-wild entries, a newly vendored or upgraded ATT&CK catalog,
+ * or a new CWE Top 25 change what the plugin knows; checksum churn on a
+ * description does not.
+ *
+ * A source appearing for the FIRST time (no prior version recorded) is
+ * material — vendoring ATT&CK where there was none genuinely changes the
+ * knowledge base. This is exported so the release-gating logic is testable
+ * rather than buried inside main().
+ */
+export function isMaterialChange(results, previous) {
+  const prev = previous?.sources ?? {};
+
+  const kevGrew = results.kev
+    && (prev.kev?.count === undefined || results.kev.count > prev.kev.count);
+
+  const attackChanged = results.attack?.version
+    && results.attack.version !== prev.attack?.version;
+
+  const cweChanged = results.cwe?.version && results.cwe.version !== 'unknown'
+    && results.cwe.version !== prev.cwe?.version;
+
+  return Boolean(kevGrew || attackChanged || cweChanged);
+}
+
 function hashTree(dir) {
   const files = [];
   const walk = (current) => {
@@ -410,18 +436,7 @@ async function main() {
     .map(([file]) => file);
   const removed = Object.keys(previous.checksums ?? {}).filter((file) => !(file in checksums));
 
-  /**
-   * Materiality decides whether CI cuts a release or just refreshes data.
-   * New exploited-in-the-wild entries, a new ATT&CK catalog or a new CWE Top 25
-   * change what the plugin knows. Checksum churn on a description does not.
-   */
-  const material = Boolean(
-    results.kev && previous.sources?.kev?.count !== undefined && results.kev.count > previous.sources.kev.count,
-  ) || Boolean(
-    results.attack && previous.sources?.attack?.version && results.attack.version !== previous.sources.attack.version,
-  ) || Boolean(
-    results.cwe && previous.sources?.cwe?.version && results.cwe.version !== previous.sources.cwe.version,
-  );
+  const material = isMaterialChange(results, previous);
 
   writeJson(path.join(outDir, 'MANIFEST.json'), {
     generatedAt: nowIso(),
@@ -457,7 +472,11 @@ async function main() {
   if (failures.length === tasks.filter(([n]) => want(n)).length) process.exit(1);
 }
 
-main().catch((err) => {
-  process.stderr.write(`intel-sync failed: ${err.stack ?? err.message}\n`);
-  process.exit(1);
-});
+// Only run the network sync when invoked as a script, so the module can be
+// imported (e.g. by tests of isMaterialChange) without hitting any feed.
+if (process.argv[1]?.endsWith('intel-sync.mjs')) {
+  main().catch((err) => {
+    process.stderr.write(`intel-sync failed: ${err.stack ?? err.message}\n`);
+    process.exit(1);
+  });
+}

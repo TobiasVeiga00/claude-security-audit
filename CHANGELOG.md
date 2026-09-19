@@ -5,6 +5,13 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.3.1](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.3.0...v1.3.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* output-quality and skill issues found by end-to-end testing ([#25](https://github.com/TobiasVeiga00/claude-security-audit/issues/25)) ([7ef1e70](https://github.com/TobiasVeiga00/claude-security-audit/commit/7ef1e70d6a1b49604f33112632ea292a1f7d63dc))
+
 ## [1.3.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.2.0...v1.3.0) (2026-09-19)
 
 

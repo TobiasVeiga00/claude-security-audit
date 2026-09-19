@@ -1,0 +1,22 @@
+{
+  "name": "claude-security-audit",
+  "displayName": "Claude Security Audit",
+  "description": "Comprehensive, continuously-updated security auditing for Claude Code.",
+  "owner": {
+    "name": "Tobias Veiga",
+    "url": "https://github.com/TobiasVeiga00"
+  },
+  "plugins": [
+    {
+      "name": "security-audit",
+      "displayName": "Security Audit",
+      "description": "End-to-end security auditing for web, API, mobile, wireless, cloud, code, secrets, dependencies, IaC, containers and LLM apps, with an authorization gate and professional reporting.",
+      "source": "./",
+      "category": "security",
+      "keywords": ["security", "audit", "pentest", "owasp", "appsec", "devsecops"],
+      "license": "MIT",
+      "homepage": "https://github.com/TobiasVeiga00/claude-security-audit#readme",
+      "repository": "https://github.com/TobiasVeiga00/claude-security-audit"
+    }
+  ]
+}

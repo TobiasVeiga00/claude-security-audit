@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-09-19T03:19:03.119Z",
+  "sources": {
+    "cvss": {
+      "macrovectors": 270
+    },
+    "frameworks": {
+      "nuclei-template-stats": {
+        "total": 13535,
+        "bySeverity": {
+          "info": 5129,
+          "high": 3007,
+          "medium": 2855,
+          "critical": 1967,
+          "low": 519,
+          "unknown": 58
+        }
+      }
+    }
+  },
+  "failures": [],
+  "checksums": {
+    "cvss/v4-tables.json": "593e675715b2307f",
+    "cwe/top25.json": "8d61a39b5e23978c",
+    "frameworks.json": "10550f71267ed343",
+    "kev/catalog.json": "56fd40c6aa0b271c",
+    "kev/index.json": "70cf6f86f35c5421"
+  }
+}

@@ -1,0 +1,21 @@
+# Per-project audit state. Findings may contain sensitive detail about a target.
+.security-audit/
+
+# Node
+node_modules/
+npm-debug.log*
+.npm/
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Local scratch
+*.local
+tmp/
+
+# Local agent tooling state, not part of the plugin
+.atl/

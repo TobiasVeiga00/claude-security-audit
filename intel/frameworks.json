@@ -1,0 +1,17 @@
+{
+  "description": "Upstream versions of the methodology frameworks this plugin references.",
+  "note": "Only identifiers and version numbers are recorded. OWASP prose is CC-BY-SA and is linked, never vendored.",
+  "frameworks": {
+    "nuclei-template-stats": {
+      "total": 13535,
+      "bySeverity": {
+        "info": 5129,
+        "high": 3007,
+        "medium": 2855,
+        "critical": 1967,
+        "low": 519,
+        "unknown": 58
+      }
+    }
+  }
+}

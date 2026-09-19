@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "security-audit",
+  "displayName": "Security Audit",
+  "version": "1.0.0",
+  "description": "End-to-end security auditing for web, API, mobile, wireless, cloud, code, secrets, dependencies, IaC, containers and LLM apps. Token-optimised attack-surface triage, deterministic CVSS scoring, live CVE/KEV/EPSS/ATT&CK intelligence, an authorization gate for intrusive testing, and professional Markdown/HTML/SARIF reporting.",
+  "author": {
+    "name": "Tobias Veiga",
+    "url": "https://github.com/TobiasVeiga00"
+  },
+  "homepage": "https://github.com/TobiasVeiga00/claude-security-audit#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TobiasVeiga00/claude-security-audit.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "audit",
+    "pentest",
+    "appsec",
+    "owasp",
+    "vulnerability",
+    "sast",
+    "sca",
+    "secrets",
+    "cve",
+    "mitre-attack",
+    "cvss",
+    "sarif",
+    "compliance",
+    "mobile-security",
+    "cloud-security",
+    "wireless",
+    "threat-modeling",
+    "devsecops"
+  ],
+  "userConfig": {
+    "nvd_api_key": {
+      "type": "string",
+      "title": "NVD API key",
+      "description": "Optional. A free NIST NVD API key raises the CVE lookup rate limit from 5 to 50 requests per 30 seconds. Request one at https://nvd.nist.gov/developers/request-an-api-key",
+      "sensitive": true,
+      "required": false
+    },
+    "default_report_format": {
+      "type": "string",
+      "title": "Default report formats",
+      "description": "Formats produced when you run the report skill without arguments.",
+      "options": ["markdown", "html", "sarif", "json", "csv"],
+      "multiple": true,
+      "default": "markdown"
+    },
+    "token_budget": {
+      "type": "number",
+      "title": "Audit token budget",
+      "description": "Maximum tokens of source the attack-surface mapper may select for review in one pass. Lower is cheaper and shallower.",
+      "min": 20000,
+      "max": 900000,
+      "default": 180000
+    },
+    "strict_authorization": {
+      "type": "boolean",
+      "title": "Strict authorization gate",
+      "description": "When enabled, intrusive tooling is blocked unless .security-audit/scope.json authorizes the exact target. Disabling this is not recommended and never bypasses your own legal obligations.",
+      "default": true
+    }
+  }
+}

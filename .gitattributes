@@ -1,0 +1,14 @@
+# A plugin ships to Windows and POSIX alike. Normalise line endings in the
+# repository so hooks, scripts and JSON manifests are byte-identical everywhere.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+
+# Keep generated intel out of diff noise and language statistics.
+intel/** linguist-generated=true
+tests/fixtures/** linguist-vendored=true

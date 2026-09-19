@@ -14,6 +14,7 @@
  */
 
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { posix } from './util.mjs';
 import { normalizeSeverity } from './cvss.mjs';
 
@@ -45,61 +46,118 @@ export function importScannerOutput(tool, raw, { root = process.cwd() } = {}) {
   }
 }
 
+// Defensive coercion helpers: a scanner schema changes between releases, and a
+// missing or wrong-typed field must degrade one finding, never throw away the
+// whole import.
+const arr = (value) => (Array.isArray(value) ? value : []);
+const str = (value) => (typeof value === 'string' ? value : (value == null ? '' : String(value)));
+
 const rel = (file, root) => {
   if (!file) return null;
-  const clean = String(file).replace(/^file:\/\//, '');
+  let clean = String(file);
+  if (clean.startsWith('file://')) {
+    try { clean = fileURLToPath(clean); } catch { clean = clean.replace(/^file:\/\//, ''); }
+  } else {
+    try { clean = decodeURIComponent(clean); } catch { /* leave as-is */ }
+  }
   return posix(path.isAbsolute(clean) ? path.relative(root, clean) : clean);
 };
 
+// Accepts "CWE-79", "cwe-079", "external/cwe/cwe-079" or a bare number, and
+// normalises to CWE-<n> without a leading zero, so a scanner's zero-padded form
+// matches the plugin's own CWE ids.
 const cweFrom = (values) => [...new Set(
   [].concat(values ?? [])
-    .flatMap((v) => String(v).match(/CWE[-_ ]?(\d+)/gi) ?? [])
-    .map((m) => `CWE-${m.replace(/\D/g, '')}`),
+    .flatMap((v) => str(v).match(/(\d+)/g) ?? [])
+    .map((digits) => `CWE-${parseInt(digits, 10)}`),
 )];
+
+/**
+ * Mask a credential in imported evidence when the finding is secret-class, so a
+ * secret scanner's output routed through a code-shaped importer does not leak
+ * the credential the way the dedicated secret importers avoid.
+ */
+function safeEvidence(content, { secret = false } = {}) {
+  const text = str(content);
+  if (!text) return [];
+  return [{ type: 'code', content: secret ? redact(text) : text.slice(0, 1200) }];
+}
+
+function looksSecret(domain, ruleId) {
+  return domain === 'secrets' || /secret|password|token|credential|api[_-]?key/i.test(str(ruleId));
+}
+
+/**
+ * Parse tool output that is normally newline-delimited JSON but is sometimes a
+ * JSON array (`jq -s`, `-je`, pretty-printed). Returns an array of objects,
+ * never throwing on a bad line.
+ */
+function ndjson(raw) {
+  const text = str(raw).trim();
+  if (!text) return [];
+  if (text[0] === '[') {
+    try { const parsed = JSON.parse(text); return Array.isArray(parsed) ? parsed : []; } catch { /* fall through to line parsing */ }
+  }
+  const out = [];
+  for (const line of text.split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t) continue;
+    try { out.push(JSON.parse(t)); } catch { /* skip a malformed line */ }
+  }
+  return out;
+}
 
 /* ------------------------------------------------------------------ *
  * SARIF 2.1.0 - the universal format
  * ------------------------------------------------------------------ */
 
+// SARIF result kinds that are not a live vulnerability, and how to treat them.
+const SARIF_KIND_DROP = new Set(['pass', 'notApplicable']);
+const SARIF_KIND_REVIEW = new Set(['review', 'open', 'informational']);
+
 function fromSarif(data, root) {
-  if (!data?.runs) return [];
   const out = [];
 
-  for (const run of data.runs) {
-    const toolName = run.tool?.driver?.name ?? 'sarif';
-    const rules = new Map(
-      (run.tool?.driver?.rules ?? []).map((r) => [r.id, r]),
-    );
+  for (const run of arr(data?.runs)) {
+    const toolName = str(run?.tool?.driver?.name) || 'sarif';
+    const rules = new Map(arr(run?.tool?.driver?.rules).filter((r) => r?.id).map((r) => [r.id, r]));
 
-    for (const result of run.results ?? []) {
+    for (const result of arr(run?.results)) {
+      if (!result || typeof result !== 'object') continue;
+      // A suppressed result is not a live finding.
+      if (arr(result.suppressions).some((s) => s?.status !== 'rejected')) continue;
+      const kind = result.kind;
+      if (SARIF_KIND_DROP.has(kind)) continue;
+      const isReview = SARIF_KIND_REVIEW.has(kind);
+
       const rule = rules.get(result.ruleId) ?? {};
       const loc = result.locations?.[0]?.physicalLocation ?? {};
-      const securitySeverity = Number(rule.properties?.['security-severity']);
+      const rawSecSev = rule.properties?.['security-severity'];
+      const securitySeverity = rawSecSev == null ? NaN : Number(rawSecSev);
+      const domain = guessDomain(arr(rule.properties?.tags), str(loc.artifactLocation?.uri));
 
       out.push({
-        title: result.message?.text?.split('\n')[0]?.slice(0, 160)
-          ?? rule.shortDescription?.text
-          ?? result.ruleId
-          ?? 'SARIF result',
+        title: str(result.message?.text).split('\n')[0]?.slice(0, 160)
+          || str(rule.shortDescription?.text)
+          || str(result.ruleId)
+          || 'SARIF result',
         severity: Number.isFinite(securitySeverity)
           ? normalizeSeverity(securitySeverity)
           : sarifLevelToSeverity(result.level ?? rule.defaultConfiguration?.level),
-        verdict: result.kind === 'review' ? 'needs-validation' : 'confirmed',
+        verdict: isReview ? 'needs-validation' : 'confirmed',
         confidence: { 'very-high': 'confirmed', high: 'firm', medium: 'tentative', low: 'tentative' }[rule.properties?.precision] ?? 'tentative',
-        domain: guessDomain(rule.properties?.tags ?? [], loc.artifactLocation?.uri),
+        domain,
         cwe: cweFrom(rule.properties?.tags),
-        description: rule.fullDescription?.text ?? result.message?.text ?? '',
+        description: str(rule.fullDescription?.text) || str(result.message?.text),
         location: {
           file: rel(loc.artifactLocation?.uri, root),
           startLine: loc.region?.startLine ?? null,
           endLine: loc.region?.endLine ?? null,
         },
-        evidence: loc.region?.snippet?.text
-          ? [{ type: 'code', content: loc.region.snippet.text }]
-          : [],
-        remediation: { summary: rule.help?.text ?? '', references: [rule.helpUri].filter(Boolean) },
-        blockers: result.kind === 'review' ? ['Reported by the scanner as requiring human review'] : [],
-        source: { tool: toolName, rule: result.ruleId ?? '' },
+        evidence: safeEvidence(loc.region?.snippet?.text, { secret: looksSecret(domain, result.ruleId) }),
+        remediation: { summary: str(rule.help?.text), references: [rule.helpUri].filter(Boolean) },
+        blockers: isReview ? ['Reported by the scanner as requiring human review'] : [],
+        source: { tool: toolName, rule: str(result.ruleId) },
       });
     }
   }
@@ -114,27 +172,28 @@ const sarifLevelToSeverity = (level) =>
  * ------------------------------------------------------------------ */
 
 function fromSemgrep(data, root) {
-  return (data?.results ?? []).map((r) => {
+  return arr(data?.results).filter((r) => r && typeof r === 'object').map((r) => {
     const extra = r.extra ?? {};
     const meta = extra.metadata ?? {};
+    const domain = guessDomain([].concat(meta.category ?? [], meta.technology ?? []), str(r.path));
     return {
-      title: (extra.message ?? r.check_id ?? 'Semgrep finding').split('\n')[0].slice(0, 160),
+      title: (str(extra.message) || str(r.check_id) || 'Semgrep finding').split('\n')[0].slice(0, 160),
       severity: normalizeSeverity(meta.impact ?? extra.severity),
       confidence: { HIGH: 'firm', MEDIUM: 'tentative', LOW: 'tentative' }[meta.confidence] ?? 'tentative',
-      domain: guessDomain([].concat(meta.category ?? [], meta.technology ?? []), r.path),
+      domain,
       cwe: cweFrom(meta.cwe),
       owasp: [].concat(meta.owasp ?? []),
-      description: extra.message ?? '',
+      description: str(extra.message),
       location: { file: rel(r.path, root), startLine: r.start?.line ?? null, endLine: r.end?.line ?? null },
-      evidence: extra.lines ? [{ type: 'code', content: String(extra.lines).slice(0, 1200) }] : [],
-      remediation: { summary: extra.fix ?? '', references: [].concat(meta.references ?? []) },
-      source: { tool: 'semgrep', rule: r.check_id ?? '' },
+      evidence: safeEvidence(extra.lines, { secret: looksSecret(domain, r.check_id) }),
+      remediation: { summary: str(extra.fix), references: [].concat(meta.references ?? []) },
+      source: { tool: 'semgrep', rule: str(r.check_id) },
     };
   });
 }
 
 function fromGitleaks(data, root) {
-  return (Array.isArray(data) ? data : []).map((r) => ({
+  return (Array.isArray(data) ? data : []).filter((r) => r && typeof r === 'object').map((r) => ({
     title: `Secret detected: ${r.RuleID ?? r.Description ?? 'unknown rule'}`,
     severity: 'critical',
     confidence: 'firm',
@@ -160,10 +219,10 @@ function fromGitleaks(data, root) {
 }
 
 function fromTrufflehog(raw, root) {
-  // TruffleHog emits newline-delimited JSON, one object per detection.
-  return raw.split(/\r?\n/).filter((l) => l.trim()).flatMap((line) => {
-    let r;
-    try { r = JSON.parse(line); } catch { return []; }
+  // TruffleHog emits newline-delimited JSON, but a `jq -s` or array export is
+  // common too; ndjson() accepts either.
+  return ndjson(raw).flatMap((r) => {
+    if (!r || typeof r !== 'object') return [];
     const meta = r.SourceMetadata?.Data ?? {};
     const filesystem = meta.Filesystem ?? meta.Git ?? {};
     const verified = r.Verified === true;
@@ -187,8 +246,8 @@ function fromTrufflehog(raw, root) {
 
 function fromTrivy(data, root) {
   const out = [];
-  for (const result of data?.Results ?? []) {
-    for (const v of result.Vulnerabilities ?? []) {
+  for (const result of arr(data?.Results)) {
+    for (const v of arr(result.Vulnerabilities)) {
       out.push({
         title: `${v.PkgName}@${v.InstalledVersion}: ${v.Title ?? v.VulnerabilityID}`,
         severity: normalizeSeverity(v.Severity),
@@ -207,7 +266,7 @@ function fromTrivy(data, root) {
         source: { tool: 'trivy', rule: v.VulnerabilityID ?? '' },
       });
     }
-    for (const m of result.Misconfigurations ?? []) {
+    for (const m of arr(result.Misconfigurations)) {
       out.push({
         title: m.Title ?? m.ID,
         severity: normalizeSeverity(m.Severity),
@@ -219,17 +278,17 @@ function fromTrivy(data, root) {
         source: { tool: 'trivy', rule: m.ID ?? '' },
       });
     }
-    for (const s of result.Secrets ?? []) {
+    for (const sec of arr(result.Secrets)) {
       out.push({
-        title: `Secret detected: ${s.RuleID ?? s.Title}`,
+        title: `Secret detected: ${str(sec.RuleID) || str(sec.Title)}`,
         severity: 'critical',
         confidence: 'firm',
         domain: 'secrets',
         cwe: ['CWE-798'],
-        location: { file: rel(result.Target, root), startLine: s.StartLine ?? null },
-        evidence: [{ type: 'note', content: redact(s.Match ?? ''), redacted: true }],
+        location: { file: rel(result.Target, root), startLine: sec.StartLine ?? null },
+        evidence: [{ type: 'note', content: redact(sec.Match ?? ''), redacted: true }],
         remediation: { summary: 'Revoke, rotate and purge from history.', effort: 'medium' },
-        source: { tool: 'trivy', rule: s.RuleID ?? '' },
+        source: { tool: 'trivy', rule: str(sec.RuleID) },
       });
     }
   }
@@ -237,7 +296,7 @@ function fromTrivy(data, root) {
 }
 
 function fromGrype(data) {
-  return (data?.matches ?? []).map((m) => {
+  return arr(data?.matches).filter((m) => m && typeof m === 'object').map((m) => {
     const v = m.vulnerability ?? {};
     const artifact = m.artifact ?? {};
     return {
@@ -262,10 +321,10 @@ function fromGrype(data) {
 
 function fromOsvScanner(data, root) {
   const out = [];
-  for (const result of data?.results ?? []) {
+  for (const result of arr(data?.results)) {
     const source = result.source?.path;
-    for (const pkg of result.packages ?? []) {
-      for (const v of pkg.vulnerabilities ?? []) {
+    for (const pkg of arr(result.packages)) {
+      for (const v of arr(pkg.vulnerabilities)) {
         const cves = (v.aliases ?? []).filter((a) => a.startsWith('CVE-'));
         out.push({
           title: `${pkg.package?.name}@${pkg.package?.version}: ${v.summary ?? v.id}`,
@@ -290,7 +349,7 @@ function fromCheckov(data, root) {
   const blocks = Array.isArray(data) ? data : [data];
   const out = [];
   for (const block of blocks) {
-    for (const check of block?.results?.failed_checks ?? []) {
+    for (const check of arr(block?.results?.failed_checks)) {
       out.push({
         title: check.check_name ?? check.check_id,
         severity: normalizeSeverity(check.severity ?? 'medium'),
@@ -303,8 +362,8 @@ function fromCheckov(data, root) {
           endLine: check.file_line_range?.[1] ?? null,
           resource: check.resource ?? null,
         },
-        evidence: (check.code_block ?? []).length
-          ? [{ type: 'code', content: check.code_block.map((l) => l[1]).join('') }]
+        evidence: arr(check.code_block).length
+          ? safeEvidence(arr(check.code_block).map((l) => (Array.isArray(l) ? l[1] : l)).join(''), { secret: /secret|CKV_SECRET/i.test(str(check.check_id)) })
           : [],
         remediation: { summary: check.guideline ?? '', references: [check.guideline].filter(Boolean) },
         source: { tool: 'checkov', rule: check.check_id ?? '' },
@@ -316,8 +375,8 @@ function fromCheckov(data, root) {
 
 function fromKics(data, root) {
   const out = [];
-  for (const query of data?.queries ?? []) {
-    for (const file of query.files ?? []) {
+  for (const query of arr(data?.queries)) {
+    for (const file of arr(query.files)) {
       out.push({
         title: query.query_name ?? 'KICS finding',
         severity: normalizeSeverity(query.severity),
@@ -336,17 +395,19 @@ function fromKics(data, root) {
 }
 
 function fromBandit(data, root) {
-  return (data?.results ?? []).map((r) => ({
-    title: r.issue_text ?? r.test_name,
+  return arr(data?.results).filter((r) => r && typeof r === 'object').map((r) => ({
+    title: str(r.issue_text) || str(r.test_name) || 'Bandit finding',
     severity: normalizeSeverity(r.issue_severity),
     confidence: { HIGH: 'firm', MEDIUM: 'tentative', LOW: 'tentative' }[r.issue_confidence] ?? 'tentative',
     domain: 'code',
+    // bandit's issue_cwe.id is a bare integer; cweFrom now accepts that.
     cwe: cweFrom(r.issue_cwe?.id),
-    description: r.issue_text ?? '',
+    description: str(r.issue_text),
     location: { file: rel(r.filename, root), startLine: r.line_number ?? null },
-    evidence: r.code ? [{ type: 'code', content: r.code }] : [],
+    // A B105/B106/B107 (hardcoded password) finding's code IS the secret.
+    evidence: safeEvidence(r.code, { secret: /B10[567]/.test(str(r.test_id)) }),
     remediation: { references: [r.more_info].filter(Boolean) },
-    source: { tool: 'bandit', rule: r.test_id ?? '' },
+    source: { tool: 'bandit', rule: str(r.test_id) },
   }));
 }
 
@@ -377,25 +438,24 @@ function fromNpmAudit(data) {
 }
 
 function fromNuclei(raw) {
-  return raw.split(/\r?\n/).filter((l) => l.trim()).flatMap((line) => {
-    let r;
-    try { r = JSON.parse(line); } catch { return []; }
+  return ndjson(raw).flatMap((r) => {
+    if (!r || typeof r !== 'object') return [];
     const info = r.info ?? {};
     return [{
-      title: info.name ?? r['template-id'],
+      title: str(info.name) || str(r['template-id']) || 'Nuclei finding',
       severity: normalizeSeverity(info.severity),
       confidence: 'firm',
       domain: 'web',
       cve: [].concat(info.classification?.['cve-id'] ?? []).map((c) => String(c).toUpperCase()),
       cwe: cweFrom(info.classification?.['cwe-id']),
       cvss: info.classification?.['cvss-metrics'] ?? null,
-      description: info.description ?? '',
+      description: str(info.description),
       location: { url: r['matched-at'] ?? r.host ?? null, host: r.host ?? null },
-      evidence: r['extracted-results']?.length
-        ? [{ type: 'response', content: r['extracted-results'].join('\n').slice(0, 1200) }]
+      evidence: arr(r['extracted-results']).length
+        ? [{ type: 'response', content: arr(r['extracted-results']).join('\n').slice(0, 1200) }]
         : [],
-      remediation: { summary: info.remediation ?? '', references: [].concat(info.reference ?? []) },
-      source: { tool: 'nuclei', rule: r['template-id'] ?? '' },
+      remediation: { summary: str(info.remediation), references: [].concat(info.reference ?? []) },
+      source: { tool: 'nuclei', rule: str(r['template-id']) },
     }];
   });
 }

@@ -104,6 +104,12 @@ plans the audit as units of *surface × trust boundary × attack class*, drives
 each to a terminal state, and requires a reason for anything it did not examine.
 The report discloses coverage honestly — a gap is a gap, not a silent omission.
 
+**It gates a pipeline, and re-audits incrementally.** `finding.mjs gate
+--fail-on high` exits non-zero when an open finding meets your threshold, so a
+new P0 fails the PR — and `finding.mjs diff <prev> <curr>` reports exactly what
+was introduced, resolved or still persists since the last scan, which is what
+the append-only ledger was built for.
+
 **It scores CVSS correctly.** v3.1 exactly to the FIRST specification; v4.0 using
 FIRST's official MacroVector tables, validated against published NVD scores — and
 it refuses to guess a score when the tables are absent rather than invent one.

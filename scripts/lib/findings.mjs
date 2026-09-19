@@ -468,6 +468,22 @@ export class FindingStore {
   }
 
   /**
+   * Open, confirmed findings at or above `severity` — the set a CI gate should
+   * fail on. Mirrors the `open` definition in stats(): a dismissed, fixed,
+   * accepted, duplicate or rejected finding, and an unvalidated lead, never
+   * block a pipeline.
+   */
+  blocking(severity = 'high') {
+    const floor = severityRank(severity);
+    return this.load()
+      .filter((f) => f.verdict === 'confirmed'
+        && !NON_VULNERABLE_STATUSES.has(f.status)
+        && !['fixed', 'accepted-risk'].includes(f.status)
+        && severityRank(f.severity) >= floor)
+      .sort(byPriorityDesc);
+  }
+
+  /**
    * Findings introduced in one scan versus another. Uses the per-finding
    * `seenIn` scan list rather than the single `scanId`, because a finding that
    * persists unchanged keeps its original scanId while still being present in

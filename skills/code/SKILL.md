@@ -121,8 +121,8 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" import --tool sarif --file .sec
 ```
 
 The importers that exist are: `sarif`, `semgrep`, `gitleaks`, `trufflehog`,
-`trivy`, `grype`, `osv-scanner`, `checkov`, `kics`, `bandit`, `npm-audit`,
-`nuclei`. Everything else routes through `--tool sarif`.
+`trivy`, `grype`, `osv-scanner`, `checkov`, `kics`, `prowler`, `bandit`,
+`npm-audit`, `nuclei`. Everything else routes through `--tool sarif`.
 
 Scanner output is a **starting point, not a finding**. Every imported result is
 `tentative` until you read the code and confirm the boundary. Triage them with

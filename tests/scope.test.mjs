@@ -186,3 +186,68 @@ test('escalating flags reclassify an otherwise-permitted tool', () => {
   assert.equal(intrusive.decision, 'deny');
   assert.equal(intrusive.class, 'exploitation');
 });
+
+/* ---------------------------------------------------------------- *
+ * Gate-hardening regressions (Fable audit findings F1-F5).
+ * Each of these was a verified bypass: an intrusive command against a
+ * public target that the gate wrongly allowed.
+ * ---------------------------------------------------------------- */
+
+import { normalizeForClassification } from '../scripts/lib/scope.mjs';
+
+test('F1: a path-qualified or quoted intrusive tool is still classified', () => {
+  const dir = withScope(null);
+  for (const cmd of [
+    '/usr/bin/nmap -sV 8.8.8.8',
+    'PROG=x /usr/local/bin/sqlmap -u http://evil.com/a?id=1',
+    'n"m"ap 8.8.8.8',
+    String.raw`C:\Windows\Tools\nmap.exe 8.8.8.8`, // real Windows backslash path
+  ]) {
+    assert.equal(evaluateCommand(cmd, dir).decision, 'deny', cmd);
+  }
+});
+
+test('F2: obfuscated and IPv6 targets are extracted and gated', () => {
+  const dir = withScope(null);
+  for (const cmd of [
+    'nmap 134744072',                          // decimal 8.8.8.8
+    'nmap 0x08080808',                         // hex 8.8.8.8
+    'nmap 2606:4700:4700::1111',               // public IPv6
+    'nuclei -u http://[2606:4700:4700::1111]', // IPv6 URL literal
+  ]) {
+    assert.equal(evaluateCommand(cmd, dir).decision, 'deny', cmd);
+  }
+});
+
+test('F2: a scanning command with no verifiable target fails closed', () => {
+  const dir = withScope(null);
+  const v = evaluateCommand('nmap -iL targets.txt', dir);
+  assert.equal(v.decision, 'deny', 'a target file could hold anything; do not assume local');
+});
+
+test('a decimal integer that resolves to loopback is still local', () => {
+  const dir = withScope(null);
+  assert.equal(evaluateCommand('nmap 2130706433', dir).decision, 'allow'); // 127.0.0.1
+});
+
+test('F3: a subdomain of an explicitly excluded host is denied', () => {
+  const dir = withScope({
+    ...AUTHORIZED,
+    outOfScope: { hosts: ['payments.acme.com'], domains: [], ipRanges: [], notes: [] },
+  });
+  assert.equal(evaluateCommand('nmap -sV www.payments.acme.com', dir).decision, 'deny');
+  assert.equal(evaluateCommand('nmap -sV payments.acme.com', dir).decision, 'deny');
+  assert.equal(evaluateCommand('nmap -sV www.acme.com', dir).decision, 'allow');
+});
+
+test('IPv6 private and link-local ranges are recognised as local', () => {
+  for (const t of ['::1', 'fe80::1', 'fc00::1', 'fd12:3456::1']) {
+    assert.equal(isLocalTarget(t), true, `${t} should be local`);
+  }
+  assert.equal(isLocalTarget('2606:4700:4700::1111'), false, 'public IPv6 is not local');
+});
+
+test('normalizeForClassification exposes a path-qualified binary as a bare word', () => {
+  assert.match(normalizeForClassification('/usr/bin/nmap -sV x'), /(^|\s)nmap(\s|$)/);
+  assert.match(normalizeForClassification('n"m"ap x'), /(^|\s)nmap(\s|$)/);
+});

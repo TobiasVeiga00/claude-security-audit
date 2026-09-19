@@ -166,26 +166,91 @@ export function saveScope(scope, cwd = process.cwd()) {
  * Target matching
  * ------------------------------------------------------------------ */
 
-/** Extract every plausible network target from a shell command line. */
+/**
+ * Output-file extensions that are genuinely files, not hosts. Deliberately
+ * excludes real gTLDs (`.zip`, `.mov`, `.app`, `.dev`, `.sh`): a token that ends
+ * in a gTLD is treated as a possible host so the scope check sees it, rather
+ * than being silently dropped and letting the command through.
+ */
+const FILE_EXT_SKIP = /\.(js|ts|jsx|tsx|py|go|rb|php|java|json|ya?ml|md|txt|xml|html?|css|lock|toml|ini|cfg|conf|env|pem|crt|key|log|csv|tar|gz|tgz|apk|ipa|jar|war|so|dll|exe|out|nmap|gnmap|pcap|pcapng)$/i;
+
+/**
+ * Extract every plausible network target from a shell command line.
+ *
+ * This feeds the authorization gate, so its bias is toward OVER-extraction: a
+ * token that might be a host is surfaced and left for the scope check to
+ * approve or deny. Missing a target is a bypass; an extra one is only a
+ * false deny the operator can fix by declaring scope.
+ *
+ * Handles dotted-quad IPv4, decimal / hex / octal integer IPv4 (nmap accepts
+ * `nmap 134744072`), bracketed and bare IPv6, `http(s)` URLs (incl. userinfo
+ * and IPv6 literals), and letter-TLD hostnames.
+ */
 export function extractTargets(command) {
   const targets = new Set();
-
-  const urlRe = /\bhttps?:\/\/([A-Za-z0-9._-]+(?::\d+)?)(?:\/[^\s"']*)?/g;
+  const add = (value) => { if (value) targets.add(String(value).toLowerCase()); };
   let match;
-  while ((match = urlRe.exec(command)) !== null) targets.add(match[1].split(':')[0].toLowerCase());
 
-  const hostRe = /\b((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24})\b/gi;
-  while ((match = hostRe.exec(command)) !== null) {
-    const host = match[1].toLowerCase();
-    // Skip things that are obviously filenames, not hosts.
-    if (/\.(js|ts|py|go|rb|php|java|json|ya?ml|md|txt|sh|xml|html|css|lock|toml|cfg|ini|conf|env|pem|crt|key|log|csv|zip|tar|gz|apk|ipa|jar|war|so|dll|exe)$/i.test(host)) continue;
-    targets.add(host);
+  // URLs first, including user@host and [IPv6] literals.
+  const urlRe = /\bhttps?:\/\/(?:[^/@\s"']*@)?(\[[0-9a-f:]+\]|[A-Za-z0-9._-]+)(?::\d+)?/gi;
+  while ((match = urlRe.exec(command)) !== null) {
+    add(normalizeIpToken(match[1].replace(/^\[|\]$/g, '')));
   }
 
-  const cidrRe = /\b(\d{1,3}(?:\.\d{1,3}){3}(?:\/\d{1,2})?)\b/g;
-  while ((match = cidrRe.exec(command)) !== null) targets.add(match[1]);
+  // CIDR and dotted-quad IPv4 (with optional hex/octal octets).
+  const cidrRe = /\b((?:0x[0-9a-f]+|0[0-7]*|\d{1,3})(?:\.(?:0x[0-9a-f]+|0[0-7]*|\d{1,3})){3}(?:\/\d{1,2})?)\b/gi;
+  while ((match = cidrRe.exec(command)) !== null) add(normalizeIpToken(match[1]));
+
+  // Hostnames with a letter TLD.
+  const hostRe = /\b((?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,23})\b/gi;
+  while ((match = hostRe.exec(command)) !== null) {
+    const host = match[1].toLowerCase().replace(/\.$/, '');
+    if (FILE_EXT_SKIP.test(host)) continue;
+    add(host);
+  }
+
+  // Bare IPv6 literals (at least two colons so we do not catch `host:port`).
+  const ipv6Re = /\b((?:[0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4})\b/gi;
+  while ((match = ipv6Re.exec(command)) !== null) {
+    if ((match[1].match(/:/g) || []).length >= 2 && /[0-9a-f]/i.test(match[1])) add(match[1]);
+  }
+
+  // Bare decimal / hex integer that resolves to a valid IPv4 (nmap accepts these).
+  const intRe = /(?:^|[\s=@])((?:0x[0-9a-f]{1,8})|\d{1,10})(?=$|[\s/])/gi;
+  while ((match = intRe.exec(command)) !== null) {
+    const normalized = normalizeIntegerIp(match[1]);
+    if (normalized) add(normalized);
+  }
 
   return [...targets];
+}
+
+/** Normalize a single token that may be a dotted/integer/hex IPv4 to dotted-quad. */
+function normalizeIpToken(token) {
+  if (!token) return token;
+  const t = token.toLowerCase();
+  if (/^(?:0x[0-9a-f]+|0[0-7]*|\d{1,3})(?:\.(?:0x[0-9a-f]+|0[0-7]*|\d{1,3})){3}$/.test(t)) {
+    const parts = t.split('.').map(parseIntAuto);
+    if (parts.every((n) => n !== null && n >= 0 && n <= 255)) return parts.join('.');
+  }
+  return t;
+}
+
+/** A bare integer (decimal or hex) that fits in 32 bits maps to a dotted-quad. */
+function normalizeIntegerIp(token) {
+  const n = parseIntAuto(token);
+  if (n === null || n < 0 || n > 0xffffffff) return null;
+  // A small integer is almost never an IP target (it is a port, count, flag).
+  if (n <= 255) return null;
+  return [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
+}
+
+function parseIntAuto(token) {
+  const t = String(token).trim();
+  if (/^0x[0-9a-f]+$/i.test(t)) return parseInt(t, 16);
+  if (/^0[0-7]+$/.test(t)) return parseInt(t, 8);
+  if (/^\d+$/.test(t)) return parseInt(t, 10);
+  return null;
 }
 
 /** MAC addresses on a wireless command line are access points, i.e. targets. */
@@ -227,13 +292,22 @@ function inCidr(ip, cidr) {
 
 /** Loopback and RFC1918 targets are the auditor's own lab; never gate them. */
 export function isLocalTarget(target) {
-  if (/^(localhost|127\.0\.0\.1|::1|0\.0\.0\.0)$/i.test(target)) return true;
-  if (/\.(local|localhost|test|internal|invalid|example)$/i.test(target)) return true;
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(target)) {
-    return inCidr(target, '10.0.0.0/8')
-      || inCidr(target, '172.16.0.0/12')
-      || inCidr(target, '192.168.0.0/16')
-      || inCidr(target, '127.0.0.0/8');
+  const t = String(target).toLowerCase().replace(/^\[|\]$/g, '');
+  if (/^(localhost|127\.0\.0\.1|::1|0\.0\.0\.0|::)$/i.test(t)) return true;
+  if (/\.(local|localhost|test|internal|invalid|example)$/i.test(t)) return true;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(t)) {
+    return inCidr(t, '10.0.0.0/8')
+      || inCidr(t, '172.16.0.0/12')
+      || inCidr(t, '192.168.0.0/16')
+      || inCidr(t, '127.0.0.0/8')
+      || inCidr(t, '169.254.0.0/16'); // link-local
+  }
+  // IPv6 private/loopback/link-local ranges.
+  if (t.includes(':')) {
+    return /^::1$/.test(t)              // loopback
+      || /^fe[89ab][0-9a-f]:/i.test(t)  // link-local fe80::/10
+      || /^f[cd][0-9a-f]{2}:/i.test(t)  // unique local fc00::/7
+      || /^::ffff:127\./i.test(t);      // IPv4-mapped loopback
   }
   return false;
 }
@@ -242,11 +316,13 @@ export function matchesScope(target, scope) {
   if (!scope) return false;
   const t = target.toLowerCase();
 
-  for (const blocked of scope.outOfScope?.hosts ?? []) {
-    if (t === blocked.toLowerCase()) return false;
-  }
-  for (const blocked of scope.outOfScope?.domains ?? []) {
-    if (t === blocked.toLowerCase() || t.endsWith(`.${blocked.toLowerCase()}`)) return false;
+  // Exclusions match a host and all of its subdomains, so excluding
+  // `payments.acme.com` also excludes `www.payments.acme.com`. Using an exact
+  // match here (while inclusions use a suffix match) let an excluded host's
+  // subdomains back into scope.
+  for (const blocked of [...(scope.outOfScope?.hosts ?? []), ...(scope.outOfScope?.domains ?? [])]) {
+    const b = blocked.toLowerCase().replace(/^\*\./, '');
+    if (t === b || t.endsWith(`.${b}`)) return false;
   }
   for (const range of scope.outOfScope?.ipRanges ?? []) {
     if (/^\d{1,3}(\.\d{1,3}){3}$/.test(t) && inCidr(t, range)) return false;
@@ -279,22 +355,47 @@ export function matchesScope(target, scope) {
  * The gate
  * ------------------------------------------------------------------ */
 
+/**
+ * Normalize a command for tool detection.
+ *
+ * Tool names hide behind a path prefix (`/usr/bin/nmap`), quotes (`n"m"ap`),
+ * backslashes, or a leading env assignment (`PROG=x nmap`). We strip quotes and
+ * turn every path separator into a space, so a path-qualified or quoted binary
+ * surfaces as a bare word the classifier can see. The bias is deliberate:
+ * over-detecting a tool only gates more; under-detecting one is a bypass.
+ *
+ * Target extraction still runs on the ORIGINAL command, so URLs and hosts are
+ * unaffected by this transform.
+ */
+export function normalizeForClassification(command) {
+  return String(command)
+    .replace(/['"]/g, '')       // n"m"ap -> nmap
+    .replace(/[/\\]/g, ' ')     // /usr/bin/nmap -> ' usr bin nmap'
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
 function classify(command) {
-  const lower = command.toLowerCase();
+  const normalized = normalizeForClassification(command);
   const matched = [];
 
   for (const escalation of ESCALATING_FLAGS) {
-    if (escalation.re.test(command)) {
+    // Escalating flags are matched on both forms: the flag text on the original
+    // (flags can contain slashes), and on the normalized to catch path-qualified
+    // binaries.
+    if (escalation.re.test(command) || escalation.re.test(normalized)) {
       matched.push({ class: escalation.reason.includes('denial') || escalation.reason.includes('flood') ? 'disruptive' : 'exploitation', tool: escalation.reason });
     }
   }
 
   for (const [className, tools] of Object.entries(TOOL_CLASSES)) {
     for (const tool of tools) {
-      const pattern = tool.includes(' ')
-        ? new RegExp(`(^|[;&|]\\s*|\\s)${tool.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
-        : new RegExp(`(^|[;&|(\`]\\s*|\\s)${tool.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      if (pattern.test(lower)) matched.push({ class: className, tool });
+      // After normalization every token is space-delimited, so a single word
+      // boundary rule covers path-qualified, quoted and env-prefixed forms. An
+      // optional Windows executable extension (nmap.exe, sqlmap.cmd) is allowed.
+      const escaped = tool.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = new RegExp(`(?:^|\\s)${escaped}(?:\\.(?:exe|cmd|bat|com|ps1))?(?=$|[\\s;&|])`, 'i');
+      if (pattern.test(normalized)) matched.push({ class: className, tool });
     }
   }
 
@@ -336,21 +437,36 @@ export function evaluateCommand(command, cwd = process.cwd()) {
    * The "it is only my own lab" shortcut is available to scanning classes,
    * where a target must be named for anything to happen at all.
    *
-   * It is NOT available to wireless, exploitation or disruptive activity: those
-   * act on radio space, credentials or availability, and a command with no
-   * parseable host is precisely the case we cannot verify. Unverifiable plus
-   * destructive fails closed.
+   * It requires that AT LEAST ONE target was parsed and EVERY parsed target is
+   * local. A scanning command with no parseable target is NOT assumed local:
+   * that is exactly the obfuscated-target case (`nmap 134744072`, a target
+   * file via `-iL`, an unusual encoding), and treating "nothing I could read"
+   * as "my own lab" was a bypass. Unverifiable fails closed.
+   *
+   * The shortcut is never available to wireless, exploitation or disruptive
+   * activity: those act on radio space, credentials or availability.
    */
   const MAY_ASSUME_LOCAL = new Set(['passiveRecon', 'activeScan']);
 
-  if (remoteTargets.length === 0 && MAY_ASSUME_LOCAL.has(cls)) {
-    return {
-      decision: 'allow',
-      class: cls,
-      tools,
-      targets,
-      reason: 'every target resolves to localhost or a private range (auditor-owned lab)',
-    };
+  if (MAY_ASSUME_LOCAL.has(cls)) {
+    if (targets.length > 0 && remoteTargets.length === 0) {
+      return {
+        decision: 'allow',
+        class: cls,
+        tools,
+        targets,
+        reason: 'every parsed target resolves to localhost or a private range (auditor-owned lab)',
+      };
+    }
+    if (targets.length === 0) {
+      return {
+        decision: scope ? 'ask' : 'deny',
+        class: cls,
+        tools,
+        targets: [],
+        reason: `No verifiable target could be read from this ${cls} command. Declare the target in scope, or use an explicit local address (127.0.0.1, a private range). An unreadable or obfuscated target is not assumed to be your own lab.`,
+      };
+    }
   }
 
   if (!scope) {

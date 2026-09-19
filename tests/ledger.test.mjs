@@ -81,6 +81,40 @@ test('rejected and accepted-risk are excluded from the open count', () => {
   assert.equal(s.acceptedRisk, 1);
 });
 
+test('the CI gate blocks on open findings at or above the threshold, and nothing else', () => {
+  const store = new FindingStore(tmp());
+  store.add([
+    base({ title: 'crit', severity: 'critical', location: { file: 'a.js', symbol: 'a' } }),
+    base({ title: 'high', severity: 'high', location: { file: 'b.js', symbol: 'b' } }),
+    base({ title: 'med', severity: 'medium', location: { file: 'c.js', symbol: 'c' } }),
+  ]);
+  assert.equal(store.blocking('high').length, 2, 'critical + high block at --fail-on high');
+  assert.equal(store.blocking('critical').length, 1, 'only critical blocks at --fail-on critical');
+  assert.equal(store.blocking('medium').length, 3, 'the medium is included at --fail-on medium');
+
+  // A dismissed or accepted finding must not fail a pipeline.
+  const high = store.load().find((f) => f.title === 'high');
+  store.setStatus(high.id, 'accepted-risk', { note: 'business accepts it' });
+  assert.equal(store.blocking('high').length, 1, 'an accepted-risk finding no longer blocks');
+});
+
+test('diff reports findings introduced, persisting and resolved between scans', () => {
+  const store = new FindingStore(tmp());
+  store.add([
+    base({ title: 'old', location: { file: 'a.js', symbol: 'a' } }),
+    base({ title: 'gone', location: { file: 'b.js', symbol: 'b' } }),
+  ], { scanId: 'scan-1' });
+  store.add([
+    base({ title: 'old', location: { file: 'a.js', symbol: 'a' } }),
+    base({ title: 'new', location: { file: 'c.js', symbol: 'c' } }),
+  ], { scanId: 'scan-2' });
+
+  const d = store.diff('scan-1', 'scan-2');
+  assert.deepEqual(d.introduced.map((f) => f.title), ['new']);
+  assert.deepEqual(d.resolved.map((f) => f.title), ['gone']);
+  assert.deepEqual(d.persisting.map((f) => f.title), ['old']);
+});
+
 test('a rejected verdict carries no severity or risk', () => {
   const f = normalizeFinding({ title: 'x', verdict: 'rejected', severity: 'critical', kev: true, domain: 'code', location: { file: 'a.js' } });
   assert.equal(f.severity, null);

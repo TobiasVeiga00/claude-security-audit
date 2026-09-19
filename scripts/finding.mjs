@@ -114,6 +114,36 @@ async function main() {
       break;
     }
 
+    case 'diff': {
+      const [, previous, current] = args._;
+      if (!previous || !current) fail('usage: finding.mjs diff <previousScanId> <currentScanId> [--fail-on-new]');
+      const brief = (f) => ({ id: f.id, severity: f.severity, tier: f.risk?.tier ?? null, domain: f.domain, title: f.title, location: f.location });
+      const d = store.diff(String(previous), String(current));
+      emit({
+        previousScanId: String(previous),
+        currentScanId: String(current),
+        introduced: d.introduced.map(brief),
+        resolved: d.resolved.map(brief),
+        persisting: d.persisting.length,
+      });
+      // For pipelines that must not regress: a new finding fails the step.
+      if (args['fail-on-new'] && d.introduced.length) process.exit(2);
+      break;
+    }
+
+    case 'gate': {
+      const threshold = args['fail-on'] ? String(args['fail-on']) : 'high';
+      const valid = ['critical', 'high', 'medium', 'low', 'info'];
+      if (!valid.includes(threshold)) fail(`unknown --fail-on severity "${threshold}". Valid: ${valid.join(', ')}`);
+      const blocking = store.blocking(threshold);
+      const bySeverity = {};
+      for (const f of blocking) bySeverity[f.severity] = (bySeverity[f.severity] ?? 0) + 1;
+      emit({ failOn: threshold, blocking: blocking.length, bySeverity, ids: blocking.map((f) => f.id) });
+      // Exit 2 (distinct from a usage error) so CI can gate on open findings.
+      if (blocking.length) process.exit(2);
+      break;
+    }
+
     default:
       process.stderr.write([
         'usage: finding.mjs <command>',
@@ -124,6 +154,8 @@ async function main() {
         '  show <ID>                        full detail for one finding',
         '  status <ID> <status> --note ...  record a triage verdict',
         '  stats                            counts by severity, domain and status',
+        '  diff <prevScan> <currScan>       what changed between two scans (--fail-on-new)',
+        '  gate --fail-on <severity>        exit non-zero if an open finding is >= severity (CI)',
         '',
         `  statuses: ${STATUSES.join(', ')}`,
         `  verdicts: ${VERDICTS.join(', ')}`,

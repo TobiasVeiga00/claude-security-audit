@@ -4,7 +4,7 @@
   "private": true,
   "description": "Comprehensive, continuously-updated security auditing plugin for Claude Code.",
   "scripts": {
-    "test": "node --test \"tests/**/*.test.mjs\"",
+    "test": "node --test tests/*.test.mjs",
     "surface": "node scripts/surface.mjs",
     "audit:self": "node scripts/surface.mjs . --summary",
     "intel:sync": "node scripts/intel-sync.mjs --out ./intel",

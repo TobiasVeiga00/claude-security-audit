@@ -42,8 +42,12 @@ jobs:
             exit 1
           fi
 
+      # A single-level glob the shell expands to explicit file paths keeps this
+      # working on Node 18 and 20, whose test runner does not accept a `**` glob
+      # (that landed in Node 21). Nested fixture files are not matched.
       - name: Run tests
-        run: node --test "tests/**/*.test.mjs"
+        shell: bash
+        run: node --test tests/*.test.mjs
 
       - name: Check every script parses
         shell: bash

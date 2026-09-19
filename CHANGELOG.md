@@ -5,6 +5,13 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.5.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.4.0...v1.5.0) (2026-09-19)
+
+
+### Features
+
+* **agents:** audit the agent supply chain — MCP servers, skills, hooks ([#31](https://github.com/TobiasVeiga00/claude-security-audit/issues/31)) ([83f478d](https://github.com/TobiasVeiga00/claude-security-audit/commit/83f478d2882cad8fac1cbb77042a6eee7fb924c4))
+
 ## [1.4.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.3.1...v1.4.0) (2026-09-19)
 
 

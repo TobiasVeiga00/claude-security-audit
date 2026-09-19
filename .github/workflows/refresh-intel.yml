@@ -33,29 +33,51 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # A pull request opened with the default GITHUB_TOKEN does NOT trigger the
+      # `pull_request` workflows, so the required CI checks never run on the
+      # refresh PR and it cannot be merged without an admin override. A GitHub
+      # App installation token does trigger them. To enable it, create a GitHub
+      # App with contents:write + pull-requests:write, install it on this repo,
+      # and set the repo variable BOT_APP_ID and secret BOT_APP_PRIVATE_KEY.
+      # Without those, this step is skipped and the PR falls back to
+      # GITHUB_TOKEN (mergeable only by an admin).
+      - name: Mint an app token when configured
+        id: app-token
+        if: ${{ vars.BOT_APP_ID != '' }}
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
 
       - name: Sync intelligence feeds
         id: sync
+        shell: bash
         env:
           # A token raises the GitHub API limit used for the framework-version
           # checks; the feeds themselves need no authentication.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          # Passed through the environment, never interpolated into the shell, so
+          # a dispatch input like `kev; rm -rf .` cannot inject a command.
+          ONLY: ${{ github.event.inputs.only }}
         run: |
-          node scripts/intel-sync.mjs \
-            ${{ github.event.inputs.only && format('--only {0}', github.event.inputs.only) || '' }} \
-            --out ./intel
+          node scripts/intel-sync.mjs ${ONLY:+--only "$ONLY"} --out ./intel
 
       - name: Run tests against refreshed data
-        run: node --test "tests/**/*.test.mjs"
+        shell: bash
+        run: node --test tests/*.test.mjs
 
       - name: Open or update the refresh pull request
         if: steps.sync.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
+          # The app token (when configured) makes the PR trigger CI; otherwise
+          # the default token is used and the PR needs an admin merge.
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           # A fixed branch name makes the action idempotent: it updates one
           # rolling PR instead of opening a new one every day.
           branch: bot/intel-refresh

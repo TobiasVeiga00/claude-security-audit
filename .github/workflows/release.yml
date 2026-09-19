@@ -28,9 +28,21 @@ jobs:
       released: ${{ steps.release.outputs.release_created }}
       tag: ${{ steps.release.outputs.tag_name }}
     steps:
+      # An app token (when configured) lets release-please's PR trigger CI so
+      # the required checks run on it; otherwise the release PR needs an admin
+      # merge. See refresh-intel.yml for the one-time GitHub App setup.
+      - name: Mint an app token when configured
+        id: app-token
+        if: ${{ vars.BOT_APP_ID != '' }}
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
       - uses: googleapis/release-please-action@v4
         id: release
         with:
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -48,10 +60,13 @@ jobs:
         with:
           node-version: '22'
 
-      # A release must be installable and correct. Gate the tag on the tests and
-      # on the plugin validator before anyone can install it.
+      # This runs AFTER release-please has tagged and published the release, so
+      # it is a post-publish smoke check, not a pre-publish gate: a failure here
+      # flags a bad release loudly for a follow-up patch rather than blocking the
+      # tag. (A true pre-publish gate would require release-please draft mode.)
       - name: Test
-        run: node --test "tests/**/*.test.mjs"
+        shell: bash
+        run: node --test tests/*.test.mjs
 
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code

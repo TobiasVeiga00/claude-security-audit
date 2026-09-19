@@ -120,3 +120,40 @@ test('readJson strips a UTF-8 BOM (PowerShell / Notepad on Windows)', async () =
   assert.deepEqual(readJson(file, null), { granted: true });
   fs.unlinkSync(file);
 });
+
+/* ------------------------------------------------------------------ *
+ * HTTP hardening regressions (Fable intel/http audit).
+ * ------------------------------------------------------------------ */
+
+import http from 'node:http';
+import { getText, retryAfterMs } from '../scripts/lib/http.mjs';
+
+test('request reads the body under the timeout, not just the headers', async () => {
+  // A server that sends the status then stalls the body must time out, not hang.
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/plain' });
+    res.write('partial');
+    // never end the response
+  });
+  await new Promise((r) => server.listen(0, r));
+  const port = server.address().port;
+  try {
+    await assert.rejects(
+      getText(`http://127.0.0.1:${port}/`, { retries: 0, timeoutMs: 400 }),
+      /.*/,
+      'a stalled body must reject within the timeout',
+    );
+  } finally {
+    server.close();
+  }
+});
+
+test('retryAfterMs parses and caps delta-seconds and HTTP-dates', () => {
+  assert.equal(retryAfterMs('1'), 1000);
+  assert.equal(retryAfterMs('86400'), 60000, 'an outrageous Retry-After is capped at 60s');
+  assert.equal(retryAfterMs(null), null);
+  assert.equal(retryAfterMs('not-a-date'), null);
+  const soon = new Date(Date.now() + 2000).toUTCString();
+  const ms = retryAfterMs(soon);
+  assert.ok(ms > 0 && ms <= 60000, 'an HTTP-date is honoured and capped');
+});

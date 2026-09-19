@@ -20,7 +20,7 @@ console.log(found.length?found.join('\n'):'(none at root — search subdirectori
 "`
 
 Tooling:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain dependencies --missing 2>&1 | head -10`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain dependencies --missing 2>&1`
 
 ---
 

@@ -16,7 +16,7 @@ reworked as **MAS Testing Profiles**. Cite a profile, never "MASVS-L1".
 !`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" $ARGUMENTS --budget 150000 --summary`
 
 Tooling:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain mobile --missing 2>&1 | head -10`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain mobile --missing 2>&1`
 
 ---
 

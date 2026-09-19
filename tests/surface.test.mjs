@@ -44,6 +44,14 @@ test('infrastructure and container misconfiguration are located', () => {
   }
 });
 
+test('sink signals fire for rust, shell and powershell', () => {
+  assert.ok(sinkIds('src/exec.rs').includes('rust.cmd-shell'), 'rust spawns a shell');
+  assert.ok(sinkIds('src/exec.rs').includes('rust.sqli'), 'rust SQL built with format!');
+  assert.ok(sinkIds('scripts/deploy.sh').includes('sh.pipe-shell'), 'curl | sh');
+  assert.ok(sinkIds('scripts/deploy.sh').includes('sh.eval'), 'eval of a variable');
+  assert.ok(sinkIds('scripts/setup.ps1').includes('ps.iex'), 'Invoke-Expression');
+});
+
 /**
  * Regression: line numbers were computed against the whole file buffer rather
  * than the match offset, so every hit collapsed onto line 1.
@@ -224,7 +232,7 @@ test('validation fails while any unit is unresolved', () => {
   }
   // A coverage claim also requires that every top-level directory is accounted.
   ledger.accountDirectories(FIXTURE, {
-    scanned: ['src', 'config', 'infra', 'tests'],
+    scanned: ['src', 'config', 'infra', 'scripts', 'tests'],
   });
   report = ledger.validate();
   assert.equal(report.ok, true, report.errors.join('; '));

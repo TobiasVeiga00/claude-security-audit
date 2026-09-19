@@ -104,7 +104,12 @@ export async function epssLookup(cves) {
   return out;
 }
 
-export async function nvdLookup(cve, { apiKey = process.env.NVD_API_KEY } = {}) {
+// Claude Code exposes a plugin userConfig value to hooks and scripts as
+// CLAUDE_PLUGIN_OPTION_<KEY>, so the configured NVD key is read from there as
+// well as from a plain NVD_API_KEY the user may export themselves.
+const NVD_API_KEY = process.env.NVD_API_KEY || process.env.CLAUDE_PLUGIN_OPTION_NVD_API_KEY || undefined;
+
+export async function nvdLookup(cve, { apiKey = NVD_API_KEY } = {}) {
   const data = await getJson(ENDPOINTS.nvd(cve), {
     headers: apiKey ? { apiKey } : {},
     // Without a key NVD allows 5 requests per 30 seconds; be patient, not greedy.

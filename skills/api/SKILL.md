@@ -14,10 +14,10 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/methodology.md` and
 
 ## Surface
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" ${1:-.} --budget 150000 --domain entrypoint --summary`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" $ARGUMENTS --budget 150000 --domain entrypoint --summary`
 
 API descriptions present:
-!`node -e "const {walk}=await import('./scripts/lib/util.mjs').catch(()=>({walk:null}));" 2>/dev/null; ls -1 openapi.yaml openapi.json swagger.json schema.graphql 2>/dev/null || echo "(none at root — search the tree)"`
+!`ls -1 openapi.yaml openapi.json swagger.json schema.graphql 2>/dev/null || echo "(none at root — search the tree for a schema)"`
 
 ---
 

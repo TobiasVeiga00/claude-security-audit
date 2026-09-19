@@ -22,6 +22,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { FindingStore, byPriorityDesc } from './lib/findings.mjs';
 import { SLA_DAYS, severityRank } from './lib/cvss.mjs';
 import { loadScope } from './lib/scope.mjs';
@@ -392,7 +393,7 @@ function renderFindingMarkdown(f) {
   const out = [];
   const p = (...lines) => out.push(...lines);
 
-  p(`### ${f.id} — ${escapeMd(f.title)}`, '');
+  p(`### ${escapeMd(f.id)} — ${escapeMd(f.title)}`, '');
 
   const tags = [
     `**Severity:** ${f.severity}`,
@@ -405,19 +406,22 @@ function renderFindingMarkdown(f) {
   if (f.kev) tags.push('**CISA KEV:** yes — exploited in the wild');
   p(tags.join(' · '), '');
 
+  // CWE/CVE/ATT&CK ids are normalised, so only link them when they match the
+  // expected shape; everything else is shown as escaped text so a malformed id
+  // cannot break out of the link or inject markup.
   const refs = [
-    ...(f.cwe ?? []).map((c) => `[${c}](https://cwe.mitre.org/data/definitions/${c.replace('CWE-', '')}.html)`),
-    ...(f.owasp ?? []),
-    ...(f.attack ?? []).map((t) => `[${t}](https://attack.mitre.org/techniques/${t.replace('.', '/')}/)`),
-    ...(f.masvs ?? []), ...(f.wstg ?? []), ...(f.asvs ?? []),
-    ...(f.cve ?? []).map((c) => `[${c}](https://nvd.nist.gov/vuln/detail/${c})`),
+    ...(f.cwe ?? []).map((c) => (/^CWE-\d+$/.test(c) ? `[${c}](https://cwe.mitre.org/data/definitions/${c.replace('CWE-', '')}.html)` : escapeMd(c))),
+    ...(f.owasp ?? []).map(escapeMd),
+    ...(f.attack ?? []).map((t) => (/^T\d{4}(\.\d{3})?$/.test(t) ? `[${t}](https://attack.mitre.org/techniques/${t.replace('.', '/')}/)` : escapeMd(t))),
+    ...(f.masvs ?? []).map(escapeMd), ...(f.wstg ?? []).map(escapeMd), ...(f.asvs ?? []).map(escapeMd),
+    ...(f.cve ?? []).map((c) => (/^CVE-\d{4}-\d+$/.test(c) ? `[${c}](https://nvd.nist.gov/vuln/detail/${c})` : escapeMd(c))),
   ];
   if (refs.length) p(`**Classification:** ${refs.join(', ')}`, '');
 
-  p(`**Location:** \`${locationLabel(f)}\``, '');
+  p(`**Location:** ${mdInlineCode(locationLabel(f))}`, '');
 
-  if (f.description) p('**Description**', '', f.description, '');
-  if (f.impact) p('**Impact**', '', f.impact, '');
+  if (f.description) p('**Description**', '', mdText(f.description), '');
+  if (f.impact) p('**Impact**', '', mdText(f.impact), '');
 
   if (f.risk?.rationale?.length) {
     p('<details><summary>How this priority was derived</summary>', '');
@@ -436,26 +440,53 @@ function renderFindingMarkdown(f) {
 
   if ((f.reproduction ?? []).length) {
     p('**Reproduction**', '');
-    f.reproduction.forEach((step, i) => p(`${i + 1}. ${step}`));
+    f.reproduction.forEach((step, i) => p(`${i + 1}. ${mdText(step)}`));
     p('');
   }
 
   p('**Remediation**', '');
-  if (f.remediation?.summary) p(f.remediation.summary, '');
+  if (f.remediation?.summary) p(mdText(f.remediation.summary), '');
   if ((f.remediation?.steps ?? []).length) {
-    f.remediation.steps.forEach((step, i) => p(`${i + 1}. ${step}`));
+    f.remediation.steps.forEach((step, i) => p(`${i + 1}. ${mdText(step)}`));
     p('');
   }
   if (f.remediation?.patch) p('_Suggested patch_', '', fence(f.remediation.patch, 'diff'), '');
-  if ((f.remediation?.references ?? []).length) {
+  const links = (f.remediation?.references ?? []).filter(isHttpUrl);
+  if (links.length) {
     p('**References**', '');
-    for (const ref of f.remediation.references) p(`- ${ref}`);
+    for (const ref of links) p(`- <${ref}>`);
     p('');
   }
 
-  p(`_Detected by ${escapeMd(f.source?.tool ?? 'manual review')}${f.source?.rule ? ` (rule \`${escapeMd(f.source.rule)}\`)` : ''}. First seen ${f.firstSeen}._`, '');
+  p(`_Detected by ${escapeMd(f.source?.tool ?? 'manual review')}${f.source?.rule ? ` (rule ${mdInlineCode(f.source.rule)})` : ''}. First seen ${escapeMd(f.firstSeen)}._`, '');
   p('---', '');
   return out;
+}
+
+/** Only http(s) links are rendered; a `javascript:`/`data:` URL is not. */
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(String(value ?? ''));
+}
+
+/**
+ * Neutralise attacker-influenced free text for Markdown: escape pipes, and
+ * strip the leading markers that would otherwise inject a heading, blockquote,
+ * list item or fence at the start of a line. Prose is otherwise preserved.
+ */
+function mdText(value) {
+  return String(value ?? '')
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/^(\s*)([#>]|[-*+](?=\s)|\d+\.(?=\s)|`{3,}|~{3,})/, '$1\\$2').replace(/\|/g, '\\|'))
+    .join('\n');
+}
+
+/** Wrap a value in inline code with a fence long enough to survive its backticks. */
+function mdInlineCode(value) {
+  const body = String(value ?? '');
+  const longest = (body.match(/`+/g) ?? ['']).reduce((a, b) => (b.length > a.length ? b : a), '');
+  const ticks = '`'.repeat(Math.max(1, longest.length + 1));
+  return `${ticks}${body}${ticks}`;
 }
 
 function evidenceLang(type) {
@@ -517,8 +548,12 @@ function renderHtml(model) {
     const steps = (f.remediation?.steps ?? []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
     const repro = (f.reproduction ?? []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
     const rationale = (f.risk?.rationale ?? []).map((s) => `<li>${escapeHtml(s)}</li>`).join('');
+    // Only render an http(s) link; a `javascript:`/`data:` reference is shown as
+    // inert text so a hostile reference cannot become a clickable script URL.
     const references = (f.remediation?.references ?? [])
-      .map((r) => `<li><a href="${escapeHtml(r)}" rel="noopener noreferrer">${escapeHtml(r)}</a></li>`).join('');
+      .map((r) => (isHttpUrl(r)
+        ? `<li><a href="${escapeHtml(r)}" rel="noopener noreferrer">${escapeHtml(r)}</a></li>`
+        : `<li>${escapeHtml(r)}</li>`)).join('');
 
     return `
     <article class="finding" id="${escapeHtml(f.id)}">
@@ -708,16 +743,31 @@ details { margin: 1rem 0; } summary { cursor: pointer; font-size: .85rem; color:
 function renderSarif(model, version) {
   const rules = new Map();
   for (const f of model.findings) {
+    const hasScannerRule = Boolean(f.source?.rule);
     const ruleId = f.source?.rule || f.cwe?.[0] || f.id;
     if (rules.has(ruleId)) continue;
+
+    // When several findings share a CWE-derived rule id, the rule's name and
+    // description must be GENERIC (about the weakness class), not taken from
+    // whichever finding happened to be first — GitHub shows the rule metadata on
+    // every alert, so a specific title would mislabel the others. The
+    // finding-specific title lives in each result's message.
+    const generic = !hasScannerRule && /^CWE-\d+$/.test(ruleId);
+    const name = generic ? `${ruleId} weakness` : f.title;
+    const description = generic
+      ? `Findings classified as ${ruleId}. See each result for the specific location and detail.`
+      : (f.description || f.title);
+
     rules.set(ruleId, {
       id: ruleId,
-      name: f.title,
-      shortDescription: { text: truncate(f.title, 120) },
-      fullDescription: { text: f.description || f.title },
+      name,
+      shortDescription: { text: truncate(name, 120) },
+      fullDescription: { text: description },
       help: {
-        text: f.remediation?.summary || 'See the audit report for remediation guidance.',
-        markdown: [
+        text: generic
+          ? 'See the audit report for per-finding remediation guidance.'
+          : (f.remediation?.summary || 'See the audit report for remediation guidance.'),
+        markdown: generic ? description : [
           f.description, f.impact ? `\n**Impact.** ${f.impact}` : '',
           f.remediation?.summary ? `\n**Remediation.** ${f.remediation.summary}` : '',
         ].filter(Boolean).join('\n'),
@@ -872,7 +922,7 @@ function main() {
   }
 
   const pkgVersion = readJson(
-    path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..', '.claude-plugin', 'plugin.json'),
+    path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.claude-plugin', 'plugin.json'),
     { version: '0.0.0' },
   ).version;
 

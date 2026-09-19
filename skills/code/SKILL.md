@@ -14,7 +14,7 @@ and the exclusions are what make this output worth reading.
 
 ## Attack surface
 
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" ${1:-.} --budget 160000 --json .security-audit/surface.json --summary`
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" $ARGUMENTS --budget 160000 --json .security-audit/surface.json --summary`
 
 Available tooling:
 !`node "${CLAUDE_PLUGIN_ROOT}/scripts/tools.mjs" --domain code --missing 2>&1 | head -12`
@@ -111,8 +111,18 @@ semgrep --config auto --json -o .security-audit/semgrep.json . 2>/dev/null
 node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" import --tool semgrep --file .security-audit/semgrep.json
 ```
 
-Also supported: `bandit`, `gosec`, `brakeman`, `njsscan`, and anything that
-emits SARIF (`--tool sarif`).
+`bandit` has a native importer (`--tool bandit`). For `gosec`, `brakeman`,
+`njsscan` and any other analyser, emit SARIF and import that — it is the
+universal path:
+
+```bash
+gosec -fmt sarif -out .security-audit/gosec.sarif ./... 2>/dev/null
+node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" import --tool sarif --file .security-audit/gosec.sarif
+```
+
+The importers that exist are: `sarif`, `semgrep`, `gitleaks`, `trufflehog`,
+`trivy`, `grype`, `osv-scanner`, `checkov`, `kics`, `bandit`, `npm-audit`,
+`nuclei`. Everything else routes through `--tool sarif`.
 
 Scanner output is a **starting point, not a finding**. Every imported result is
 `tentative` until you read the code and confirm the boundary. Triage them with

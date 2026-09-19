@@ -34,8 +34,11 @@ osv-scanner scan source --format json --output .security-audit/osv.json . 2>/dev
 node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" import --tool osv-scanner --file .security-audit/osv.json
 ```
 
-Alternatives, all supported by the importer: `trivy fs --format json`,
-`grype -o json`, `npm audit --json`, `pip-audit -f json`, `govulncheck -json`.
+Alternatives with a native importer: `trivy fs --format json` (`--tool trivy`),
+`grype -o json` (`--tool grype`), `npm audit --json` (`--tool npm-audit`).
+`pip-audit` and `govulncheck` have no native importer — emit SARIF
+(`pip-audit -f sarif`, `govulncheck -format sarif`) and import with
+`--tool sarif`.
 
 Prefer `pip-audit` over `safety` for Python — `safety`'s full database is now
 commercially gated.

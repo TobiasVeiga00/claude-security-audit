@@ -45,20 +45,20 @@ Do not cite the 2021 codes. SSRF was absorbed into A01; two categories are new.
 
 <https://api-security.owasp.org/>
 
-## OWASP Top 10 for LLM Applications — **2026**
+## OWASP Top 10 for LLM Applications — **2025** (current edition)
 
 | Code | Category |
 | --- | --- |
-| LLM01 | Prompt Injection |
-| LLM02 | Sensitive Information Disclosure |
-| LLM03 | Excessive Agency |
-| LLM04 | Supply Chain |
-| LLM05 | Data and Model Poisoning |
-| LLM06 | Unbounded Consumption |
-| LLM07 | Misinformation |
-| LLM08 | **Hidden Context Exposure** *(new; broadens the retired "System Prompt Leakage")* |
-| LLM09 | Vector and Embedding Weaknesses |
-| LLM10 | Improper Output Handling |
+| LLM01:2025 | Prompt Injection |
+| LLM02:2025 | Sensitive Information Disclosure |
+| LLM03:2025 | Supply Chain |
+| LLM04:2025 | Data and Model Poisoning |
+| LLM05:2025 | Improper Output Handling |
+| LLM06:2025 | Excessive Agency |
+| LLM07:2025 | System Prompt Leakage |
+| LLM08:2025 | Vector and Embedding Weaknesses |
+| LLM09:2025 | Misinformation |
+| LLM10:2025 | Unbounded Consumption |
 
 ## OWASP Top 10 for Agentic Applications — **2026**
 

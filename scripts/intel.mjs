@@ -47,8 +47,13 @@ function intelDir() {
 let kevIndex = null;
 export function kevLookup(cve) {
   if (kevIndex === null) {
-    kevIndex = readJson(path.join(intelDir(), 'kev', 'index.json'), {});
+    const file = path.join(intelDir(), 'kev', 'index.json');
+    // Distinguish "not listed" from "the vendored KEV file is missing". Reading
+    // an absent file as {} made every CVE look not-exploited, so enrich() would
+    // flip kev:true to false and demote confirmed-exploitation findings.
+    kevIndex = fs.existsSync(file) ? readJson(file, null) : null;
   }
+  if (kevIndex === null) return { listed: false, unavailable: true };
   const entry = kevIndex[String(cve).toUpperCase()];
   if (!entry) return { listed: false };
   return { listed: true, dateAdded: entry.d, remediationDue: entry.due, ransomware: entry.r === 1 };
@@ -177,30 +182,40 @@ export async function enrich(cwd) {
 
   const epss = await epssLookup(cves);
 
+  const kevUnavailable = kevAvailability().unavailable;
+
   const updates = [];
   for (const finding of findings) {
     if (!(finding.cve ?? []).length) continue;
+    if (finding.verdict && finding.verdict !== 'confirmed') continue; // leads/rejected carry no risk
 
-    const kev = finding.cve.map(kevLookup).find((k) => k.listed);
+    const kevHit = finding.cve.map(kevLookup).find((k) => k.listed);
     const scores = finding.cve.map((c) => epss[c]?.epss).filter((v) => typeof v === 'number');
     const worstEpss = scores.length ? Math.max(...scores) : null;
 
-    const changed = (kev?.listed === true) !== finding.kev
+    // Only ever flip `kev` when the KEV data was actually available. When it is
+    // missing, keep whatever the finding already knew rather than demoting it.
+    const nextKev = kevUnavailable ? finding.kev : kevHit?.listed === true;
+
+    const changed = nextKev !== finding.kev
       || (worstEpss !== null && worstEpss !== finding.epss);
     if (!changed) continue;
 
     updates.push({
       ...finding,
-      kev: kev?.listed === true,
+      kev: nextKev,
       epss: worstEpss ?? finding.epss,
-      tags: [...new Set([...(finding.tags ?? []), ...(kev?.ransomware ? ['ransomware-campaign'] : [])])],
+      tags: [...new Set([...(finding.tags ?? []), ...(kevHit?.ransomware ? ['ransomware-campaign'] : [])])],
+      // The fusion inputs live on the finding itself (persisted since the ledger
+      // fix), so re-ranking keeps the exposure/reachability the original score
+      // used instead of collapsing everything to "unknown".
       risk: fuseRisk({
         severity: finding.severity,
         epss: worstEpss ?? finding.epss,
-        kev: kev?.listed === true,
-        exposure: finding.extra?.exposure ?? 'unknown',
-        reachable: finding.extra?.reachable ?? null,
-        dataClass: finding.extra?.dataClass ?? null,
+        kev: nextKev,
+        exposure: finding.exposure ?? finding.extra?.exposure ?? undefined,
+        reachable: typeof finding.reachable === 'boolean' ? finding.reachable : (finding.extra?.reachable ?? null),
+        dataClass: finding.dataClass ?? finding.extra?.dataClass ?? null,
       }),
     });
   }
@@ -212,7 +227,14 @@ export async function enrich(cwd) {
     enriched: updates.length,
     nowKev: updates.filter((u) => u.kev).length,
     escalatedToP0: updates.filter((u) => u.risk?.tier === 'P0').length,
+    ...(kevUnavailable ? { warning: 'Vendored KEV data is missing; exploitation status was not updated. Run scripts/intel-sync.mjs --only kev.' } : {}),
   };
+}
+
+/** Whether the KEV index is available at all, checked once per enrich run. */
+function kevAvailability() {
+  const probe = kevLookup('CVE-0000-0000');
+  return { unavailable: probe.unavailable === true };
 }
 
 /* ------------------------------------------------------------------ *

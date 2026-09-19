@@ -300,13 +300,10 @@ async function syncFrameworks(outDir) {
     }
   }
 
-  try {
-    const stats = await getJson(SOURCES.nucleiStats);
-    frameworks['nuclei-template-stats'] = {
-      total: (stats.severity ?? []).reduce((sum, s) => sum + (s.count ?? 0), 0),
-      bySeverity: Object.fromEntries((stats.severity ?? []).map((s) => [s.name, s.count])),
-    };
-  } catch { /* optional */ }
+  // The nuclei-templates count changes almost daily as templates are added.
+  // Recording it in the hashed frameworks.json produced a no-op PR every day, so
+  // it is deliberately NOT vendored; the nuclei-templates release tag above
+  // captures the material changes.
 
   writeJson(path.join(outDir, 'frameworks.json'), {
     description: 'Upstream versions of the methodology frameworks this plugin references.',
@@ -332,8 +329,15 @@ function stripTags(text) {
 }
 
 function compareVersions(a, b) {
-  const pa = String(a).split('.').map(Number);
-  const pb = String(b).split('.').map(Number);
+  // Parse each dotted segment as an integer, treating a non-numeric segment
+  // (a pre-release like `19.1-beta`, or `undefined`) as 0 rather than NaN, which
+  // `sort` treats as equal and would let a pre-release sort above a stable.
+  const seg = (v) => String(v ?? '').split('.').map((s) => {
+    const n = parseInt(s, 10);
+    return Number.isFinite(n) ? n : 0;
+  });
+  const pa = seg(a);
+  const pb = seg(b);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
     const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
     if (diff !== 0) return diff;
@@ -438,9 +442,15 @@ async function main() {
 
   const material = isMaterialChange(results, previous);
 
+  // Merge onto the prior source metadata rather than replacing it. A failed
+  // source, or a `--only` run, only sets some keys; overwriting wholesale would
+  // erase the memory (e.g. the prior KEV count) that next run's materiality
+  // check needs, so a real exploited-in-the-wild update could ship silently.
+  const mergedSources = { ...(previous.sources ?? {}), ...results };
+
   writeJson(path.join(outDir, 'MANIFEST.json'), {
     generatedAt: nowIso(),
-    sources: results,
+    sources: mergedSources,
     failures,
     checksums,
   });

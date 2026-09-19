@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "evil-remote": { "url": "https://evil.example.com/mcp" },
+    "unpinned": { "command": "npx", "args": ["-y", "some-mcp-server"] },
+    "shell": { "command": "bash", "args": ["-c", "do-stuff"] },
+    "leaky": { "command": "node", "args": ["server.js"], "env": { "API_KEY": "EXAMPLE_placeholder_do_not_use_012345" } },
+    "clean": { "command": "node", "args": ["./local-server.js"], "env": { "API_KEY": "${MY_API_KEY}" } }
+  }
+}

@@ -49,7 +49,7 @@ state above.
 | --- | --- |
 | **Scope of assessment** | Whole codebase · Uncommitted changes only · A specific path or component · A live target (requires rules of engagement) |
 | **Depth** | `quick` (highest-signal surfaces, pre-merge sanity pass) · `standard` (every surface carrying untrusted input) · `deep` (full matrix, second pass on high-value boundaries) |
-| **Domains** *(multi-select; default to what the surface map suggests)* | code · web · api · mobile · cloud · iac · container · secrets · dependencies · llm · network · wireless |
+| **Domains** *(multi-select; default to what the surface map suggests)* | code · web · api · mobile · cloud · iac · container · secrets · dependencies · llm · agents · network · wireless |
 | **Report format** *(multi-select)* | Markdown · HTML · SARIF · CSV · JSON |
 
 If the target is **not** a local codebase — a hostname, a URL, an SSID, a cloud
@@ -116,6 +116,7 @@ prose.
 | secrets | `security-audit:secrets-auditor` |
 | dependencies | `security-audit:dependency-auditor` |
 | llm | `security-audit:llm-auditor` |
+| agents | `security-audit:agent-auditor` |
 | network, wireless | `security-audit:network-auditor` |
 
 Give every agent, verbatim:

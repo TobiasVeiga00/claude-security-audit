@@ -21,7 +21,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   walk, posix, estimateTokens, readJson, parseArgs, emit, shortHash,
-  nowIso, BINARY_EXT, DEFAULT_IGNORE_DIRS,
+  nowIso, fail, BINARY_EXT, DEFAULT_IGNORE_DIRS,
 } from './lib/util.mjs';
 import {
   LANG_BY_EXT, PATH_SIGNALS, SINK_SIGNALS, SECRET_PATTERNS, SECRET_ALLOWLIST,
@@ -109,10 +109,13 @@ function analyzeContent(absolute, relative, language, size) {
   try {
     if (size > MAX_CONTENT_BYTES) {
       const fd = fs.openSync(absolute, 'r');
-      const buffer = Buffer.alloc(SAMPLE_BYTES);
-      fs.readSync(fd, buffer, 0, SAMPLE_BYTES, 0);
-      fs.closeSync(fd);
-      content = buffer.toString('utf8');
+      try {
+        const buffer = Buffer.alloc(SAMPLE_BYTES);
+        const read = fs.readSync(fd, buffer, 0, SAMPLE_BYTES, 0);
+        content = buffer.toString('utf8', 0, read);
+      } finally {
+        fs.closeSync(fd); // in finally so a read error cannot leak the fd
+      }
       result.sampled = true;
     } else {
       content = fs.readFileSync(absolute, 'utf8');
@@ -139,7 +142,10 @@ function analyzeContent(absolute, relative, language, size) {
         cwe: rule.cwe,
         hint: rule.hint,
         weight: rule.weight,
-        excerpt: excerptAt(content, match.index),
+        // Rules whose whole purpose is to find a credential (CWE-798/-522/-321)
+        // or a logged secret (CWE-532) must not print the value into the audit
+        // JSON, so their excerpts are masked the same way the secret pass is.
+        excerpt: maskSecrets(excerptAt(content, match.index), rule.cwe),
       });
     }
   }
@@ -183,6 +189,13 @@ function excerptAt(content, index, radius = 90) {
   return content.slice(start, Math.min(content.length, index + radius)).replace(/\s+/g, ' ').trim();
 }
 
+/** Mask the value after `=`/`:` for a credential/secret-class rule's excerpt. */
+const SECRET_CWES = new Set(['CWE-798', 'CWE-522', 'CWE-321', 'CWE-532', 'CWE-259']);
+function maskSecrets(excerpt, cwe) {
+  if (!SECRET_CWES.has(cwe)) return excerpt;
+  return excerpt.replace(/([=:]\s*["'`]?)([^\s"'`]{6,})/g, (_, lead, value) => `${lead}${value.slice(0, 2)}${'*'.repeat(6)}`);
+}
+
 function redact(value) {
   const str = String(value);
   if (str.length <= 10) return `${str.slice(0, 2)}${'*'.repeat(Math.max(0, str.length - 2))}`;
@@ -219,7 +232,10 @@ function detectStack(root, files) {
   const frameworks = [];
   const pkgPath = path.join(root, 'package.json');
   if (fs.existsSync(pkgPath)) {
-    const pkg = readJson(pkgPath, {});
+    // `readJson(pkgPath, {})` returns null for a file whose content is literally
+    // `null`, which then crashed on `.dependencies`; guard the type.
+    const raw = readJson(pkgPath, {});
+    const pkg = raw && typeof raw === 'object' ? raw : {};
     const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
     for (const [name, meta] of Object.entries(FRAMEWORK_MARKERS)) {
       if (deps[name]) {
@@ -235,7 +251,10 @@ function detectStack(root, files) {
     try { body = fs.readFileSync(file, 'utf8').toLowerCase(); } catch { continue; }
     for (const [name, meta] of Object.entries(FRAMEWORK_MARKERS)) {
       if (frameworks.some((f) => f.name === name)) continue;
-      if (new RegExp(`(^|[\\s"'\\[,/])${escapeRe(name)}([\\s"'\\]=<>~^,:]|$)`, 'm').test(body)) {
+      // Boundary classes include the delimiters real manifests use: `>` and `:`
+      // before the name (Maven `<artifactId>`, Gradle `group:name`), and `/`
+      // after it (Composer `laravel/framework`).
+      if (new RegExp(`(^|[\\s"'\\[,/>:])${escapeRe(name)}([\\s"'\\]=<>~^,:/]|$)`, 'm').test(body)) {
         frameworks.push({ name, version: null, ...meta });
         meta.domains.forEach((d) => domains.add(d));
       }
@@ -267,7 +286,10 @@ function escapeRe(str) {
 
 function gitChangedFiles(root, since) {
   try {
-    const out = execFileSync('git', ['diff', '--name-only', `${since}...HEAD`], {
+    // `--relative` makes git emit paths relative to `root`, matching the
+    // walker's relative paths. Without it, on a subdirectory root every path
+    // mismatched and `--changed-only` silently dropped everything.
+    const out = execFileSync('git', ['diff', '--name-only', '--relative', `${since}...HEAD`], {
       cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'],
     });
     return new Set(out.split(/\r?\n/).filter(Boolean).map(posix));
@@ -281,7 +303,7 @@ function gitChurn(root, days = 90) {
   try {
     const out = execFileSync(
       'git',
-      ['log', `--since=${days}.days.ago`, '--name-only', '--pretty=format:'],
+      ['log', `--since=${days}.days.ago`, '--name-only', '--relative', '--pretty=format:'],
       { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 32 * 1024 * 1024 },
     );
     const counts = new Map();
@@ -302,13 +324,17 @@ function gitChurn(root, days = 90) {
 
 export function mapSurface(root, options = {}) {
   const {
-    budget = 180000,
-    top = 120,
+    budget: rawBudget = 180000,
+    top: rawTop = 120,
     includeTests = false,
     domain = null,
     changedOnly = false,
     since = 'HEAD~1',
   } = options;
+  // Defend against a non-numeric budget/top from a programmatic caller so
+  // usedTokens can never become NaN and the cap can never be disabled silently.
+  const budget = Number.isFinite(Number(rawBudget)) && Number(rawBudget) > 0 ? Number(rawBudget) : 180000;
+  const top = Number.isFinite(Number(rawTop)) && Number(rawTop) > 0 ? Number(rawTop) : 120;
 
   const absRoot = path.resolve(root);
   const started = Date.now();
@@ -375,22 +401,29 @@ export function mapSurface(root, options = {}) {
 
   candidates.sort((a, b) => b.score - a.score || a.file.localeCompare(b.file));
 
-  // Fill the budget greedily by score, but never let one huge file eat it all.
-  const selected = [];
+  // Apply the domain filter BEFORE the budget fill, so the budget is spent on
+  // the files the caller actually asked for rather than filtered away after.
+  const domainFilter = domain ? new Set([].concat(domain)) : null;
+  const inScope = domainFilter
+    ? candidates.filter((c) => c.tags.some((t) => domainFilter.has(t)) || c.sinks.some((s) => domainFilter.has(s.set)))
+    : candidates;
+
+  // Fill the budget greedily by score. A file whose estimate alone exceeds the
+  // per-file cap is skipped rather than accounted as `cap` while really costing
+  // its full size — that made usedTokens and the reduction percentage fiction.
+  const filtered = [];
   let used = 0;
   const perFileCap = Math.max(4000, Math.floor(budget / 12));
-  for (const candidate of candidates) {
-    if (selected.length >= top) break;
+  for (const candidate of inScope) {
+    if (filtered.length >= top) break;
     const cost = Math.min(candidate.estTokens, perFileCap);
+    // A file larger than the cap is read only via sampling; accept it only if
+    // it was sampled, so a huge unsampled file cannot understate the budget.
+    if (candidate.estTokens > perFileCap && !candidate.sampled) continue;
     if (used + cost > budget) continue;
-    selected.push(candidate);
+    filtered.push(candidate);
     used += cost;
   }
-
-  const domainFilter = domain ? new Set([].concat(domain)) : null;
-  const filtered = domainFilter
-    ? selected.filter((c) => c.tags.some((t) => domainFilter.has(t)) || c.sinks.some((s) => domainFilter.has(s.set)))
-    : selected;
 
   const manifests = allFiles.filter((f) => LOCKFILES.includes(path.basename(f)));
 
@@ -447,9 +480,15 @@ function suggestDomains(stack, candidates) {
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('surface.mjs')) {
   const args = parseArgs();
   const root = args._[0] ?? process.cwd();
+  const numeric = (value, fallback, label) => {
+    if (value === undefined) return fallback;
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) fail(`--${label} must be a positive number, got "${value}"`);
+    return n;
+  };
   const result = mapSurface(root, {
-    budget: Number(args.budget ?? 180000),
-    top: Number(args.top ?? 120),
+    budget: numeric(args.budget, 180000, 'budget'),
+    top: numeric(args.top, 120, 'top'),
     includeTests: args['include-tests'] === true,
     domain: args.domain ?? null,
     changedOnly: args['changed-only'] === true,

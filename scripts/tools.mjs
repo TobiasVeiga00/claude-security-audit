@@ -113,27 +113,41 @@ export const RETIRED = {
 
 function detect(tool) {
   try {
-    const output = execFileSync(tool.bin, tool.check, {
+    // On Windows many tools are `.cmd`/`.bat` shims that execFile cannot launch
+    // directly (and Node refuses to run under shell:false for CVE-2024-27980).
+    // Run them through cmd.exe there; everything else stays shell-free.
+    const { command, args } = IS_WINDOWS
+      ? { command: process.env.COMSPEC || 'cmd.exe', args: ['/d', '/s', '/c', tool.bin, ...tool.check] }
+      : { command: tool.bin, args: tool.check };
+    const output = execFileSync(command, args, {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 8000,
       windowsHide: true,
-      shell: false, // never interpolate into a shell
+      shell: false,
     });
-    return { installed: true, version: firstVersion(output) };
+    return finalize(true, output);
   } catch (err) {
-    // A tool that exists but exits non-zero on --version still counts as present.
-    if (err.status !== undefined && err.status !== null && err.stdout !== undefined) {
-      const combined = `${err.stdout ?? ''}${err.stderr ?? ''}`;
-      if (combined.trim()) return { installed: true, version: firstVersion(combined) };
+    const combined = `${err.stdout ?? ''}${err.stderr ?? ''}`;
+    // A tool that exists but exits non-zero can still be present — but only
+    // trust it if the output actually looks like a version banner, so a
+    // same-named unrelated binary printing an error is not counted as installed.
+    if (combined.trim()) {
+      const version = firstVersion(combined);
+      if (version) return { installed: true, version };
     }
     return { installed: false, version: null };
   }
 }
 
+function finalize(installed, output) {
+  return { installed, version: firstVersion(output) };
+}
+
+/** Return a version-shaped token, or null — never an arbitrary line of output. */
 function firstVersion(output) {
-  const match = /(\d+\.\d+(?:\.\d+)?(?:[-+][\w.]+)?)/.exec(String(output).split(/\r?\n/).slice(0, 4).join(' '));
-  return match ? match[1] : String(output).trim().split(/\r?\n/)[0]?.slice(0, 60) || null;
+  const match = /(\d+\.\d+(?:\.\d+)?(?:[-+][\w.]+)?)/.exec(String(output).split(/\r?\n/).slice(0, 6).join(' '));
+  return match ? match[1] : null;
 }
 
 function installHint(tool) {

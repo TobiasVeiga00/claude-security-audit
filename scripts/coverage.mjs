@@ -22,7 +22,14 @@ const command = args._[0];
 const cwd = args.cwd ? path.resolve(String(args.cwd)) : process.cwd();
 const ledger = new CoverageLedger(cwd);
 
-const list = (value) => (value ? String(value).split(',').map((s) => s.trim()).filter(Boolean) : []);
+// A bare `--evidence` / `--reason` yields the boolean true from the parser; that
+// must not satisfy an evidence or reason requirement, so booleans are rejected.
+// A repeated flag arrives as an array; each element may itself be comma-listed.
+const list = (value) => [].concat(value ?? [])
+  .filter((v) => typeof v === 'string')
+  .flatMap((v) => v.split(',').map((s) => s.trim()))
+  .filter(Boolean);
+const str = (value) => (typeof value === 'string' ? value.trim() : '');
 
 switch (command) {
   case 'plan': {
@@ -60,7 +67,7 @@ switch (command) {
     try {
       const unit = ledger.update(id, {
         state: args.state ? String(args.state) : undefined,
-        reason: args.reason ? String(args.reason) : '',
+        reason: str(args.reason),
         evidence: list(args.evidence),
         findings: list(args.findings),
       });
@@ -73,13 +80,14 @@ switch (command) {
   }
 
   case 'dirs': {
-    const setAside = {};
+    // `--set-aside "docs=documentation"` — split only on the FIRST `=` so a
+    // reason may contain commas and `=`. Repeat the flag for multiple entries.
+    const setAside = Object.create(null);
     for (const entry of [].concat(args['set-aside'] ?? [])) {
-      for (const pair of String(entry).split(',')) {
-        const eq = pair.indexOf('=');
-        if (eq === -1) continue;
-        setAside[pair.slice(0, eq).trim()] = pair.slice(eq + 1).trim();
-      }
+      if (typeof entry !== 'string') continue;
+      const eq = entry.indexOf('=');
+      if (eq === -1) continue;
+      setAside[entry.slice(0, eq).trim()] = entry.slice(eq + 1).trim();
     }
     const accounting = ledger.accountDirectories(cwd, { scanned: list(args.scanned), setAside });
     ledger.save();

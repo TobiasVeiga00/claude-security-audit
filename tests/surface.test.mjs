@@ -126,13 +126,18 @@ test('the ledger refuses unjustified dispositions', () => {
 
   assert.throws(
     () => ledger.update(id, { state: 'blocked' }),
-    /requires a reason/,
+    /requires a (fresh )?reason/,
     'not looking at something must be justified',
   );
   assert.throws(
     () => ledger.update(id, { state: 'covered' }),
     /requires evidence/,
     'claiming coverage must be backed by what was read',
+  );
+  assert.throws(
+    () => ledger.update(id, { state: 'candidate', evidence: ['x'] }),
+    /requires at least one finding/,
+    'a candidate must name the finding it produced',
   );
 
   ledger.update(id, { state: 'covered', evidence: ['src/api/users.js'] });
@@ -152,6 +157,10 @@ test('validation fails while any unit is unresolved', () => {
   for (const unit of ledger.data.units) {
     ledger.update(unit.id, { state: 'deferred', reason: 'fixture' });
   }
+  // A coverage claim also requires that every top-level directory is accounted.
+  ledger.accountDirectories(FIXTURE, {
+    scanned: ['src', 'config', 'infra', 'tests'],
+  });
   report = ledger.validate();
   assert.equal(report.ok, true, report.errors.join('; '));
   assert.match(ledger.disclosure(), /not assertions of safety/);

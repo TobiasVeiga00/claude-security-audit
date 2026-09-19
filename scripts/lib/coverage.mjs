@@ -110,7 +110,7 @@ export class CoverageLedger {
   constructor(cwd = process.cwd()) {
     this.cwd = cwd;
     this.file = ledgerPath(cwd);
-    this.data = readJson(this.file, null) ?? {
+    const empty = {
       version: 1,
       scanId: null,
       profile: 'standard',
@@ -119,6 +119,17 @@ export class CoverageLedger {
       directoryAccounting: [],
       units: [],
     };
+    if (fs.existsSync(this.file)) {
+      // A corrupted ledger must not be silently reset and then clobbered by
+      // save(); that would erase real coverage work. Fail loudly instead.
+      const loaded = readJson(this.file, null);
+      if (!loaded) {
+        throw new Error(`coverage ledger at ${this.file} exists but is not valid JSON; refusing to overwrite it. Inspect or remove it.`);
+      }
+      this.data = loaded;
+    } else {
+      this.data = empty;
+    }
   }
 
   save() {
@@ -131,6 +142,7 @@ export class CoverageLedger {
   plan(units, { profile = 'standard', scanId = null } = {}) {
     this.data.profile = profile;
     if (scanId) this.data.scanId = scanId;
+    if (Array.isArray(units.dropped)) this.data.droppedSubsystems = units.dropped;
     const existing = new Map(this.data.units.map((u) => [u.id, u]));
     let added = 0;
     for (const unit of units) {
@@ -139,7 +151,7 @@ export class CoverageLedger {
       added++;
     }
     this.data.units = [...existing.values()];
-    return { added, total: this.data.units.length };
+    return { added, total: this.data.units.length, dropped: (units.dropped ?? []).length };
   }
 
   /**
@@ -151,6 +163,13 @@ export class CoverageLedger {
     if (!unit) throw new Error(`unknown coverage unit "${id}"`);
     if (state && !STATES.includes(state)) throw new Error(`unknown state "${state}"`);
 
+    // A reason is required afresh when moving INTO a different reason-bearing
+    // state, so a stale "time" reason from a `deferred` unit cannot silently
+    // justify a later `out-of-scope`.
+    const changingReasonState = state && REASON_REQUIRED.has(state) && state !== unit.state;
+    if (changingReasonState && !reason) {
+      throw new Error(`state "${state}" requires a fresh reason: why is ${id} in this state?`);
+    }
     if (state && REASON_REQUIRED.has(state) && !reason && !unit.reason) {
       throw new Error(`state "${state}" requires a reason: why was ${id} not examined?`);
     }
@@ -158,12 +177,18 @@ export class CoverageLedger {
     if (state && EVIDENCE_REQUIRED.has(state) && mergedEvidence.length === 0) {
       throw new Error(`state "${state}" requires evidence: what was actually read or run for ${id}?`);
     }
+    const mergedFindings = [...new Set([...(unit.findings ?? []), ...findings])];
+    // `candidate` means "this unit produced a finding"; enforce it here rather
+    // than only catching it later in validate().
+    if (state === 'candidate' && mergedFindings.length === 0) {
+      throw new Error(`state "candidate" requires at least one finding id: which finding did ${id} produce?`);
+    }
 
     Object.assign(unit, {
       state: state ?? unit.state,
-      reason: reason || unit.reason,
+      reason: changingReasonState ? reason : (reason || unit.reason),
       evidence: mergedEvidence,
-      findings: [...new Set([...(unit.findings ?? []), ...findings])],
+      findings: mergedFindings,
       updatedAt: nowIso(),
     });
     return unit;
@@ -175,17 +200,23 @@ export class CoverageLedger {
    * silently misses an entire component.
    */
   accountDirectories(root, { scanned = [], setAside = {} } = {}) {
+    // Only VCS/IDE noise is skipped; `.github` holds CI workflows, a real attack
+    // surface the taxonomy names, so it must be accounted for.
+    const skip = new Set(['.git', '.hg', '.svn', '.idea', '.vscode', '.vs', 'node_modules']);
     const entries = fs.readdirSync(root, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
+      .filter((e) => e.isDirectory() && !skip.has(e.name))
       .map((e) => e.name)
       .sort();
 
+    const scannedSet = new Set(scanned);
     this.data.directoryAccounting = entries.map((name) => ({
       directory: name,
-      disposition: scanned.includes(name) ? 'scanned'
-        : setAside[name] ? 'set-aside'
+      // Object.hasOwn, not truthiness, so a directory named "constructor" is not
+      // treated as set-aside by an inherited prototype property.
+      disposition: scannedSet.has(name) ? 'scanned'
+        : Object.hasOwn(setAside, name) ? 'set-aside'
           : 'unaccounted',
-      reason: setAside[name] ?? '',
+      reason: Object.hasOwn(setAside, name) ? setAside[name] : '',
     }));
 
     return this.data.directoryAccounting;
@@ -218,10 +249,16 @@ export class CoverageLedger {
       }
     }
 
+    if ((this.data.directoryAccounting ?? []).length === 0) {
+      errors.push('no directory accounting recorded — run `coverage.mjs dirs` so every top-level directory is scanned or explicitly set aside');
+    }
     for (const row of this.data.directoryAccounting ?? []) {
       if (row.disposition === 'unaccounted') {
         errors.push(`directory "${row.directory}" was neither scanned nor explicitly set aside`);
       }
+    }
+    if (this.data.droppedSubsystems?.length) {
+      warnings.push(`${this.data.droppedSubsystems.length} subsystem(s) were dropped by the profile cap and never planned: ${this.data.droppedSubsystems.slice(0, 8).join(', ')}${this.data.droppedSubsystems.length > 8 ? ' …' : ''}`);
     }
 
     return { ok: errors.length === 0, errors, warnings };
@@ -323,18 +360,28 @@ const DEFAULT_BOUNDARY = {
   'llm-prompt': 'third-party-to-application',
 };
 
-/** Translate a surface map into a concrete, bounded coverage plan. */
+/**
+ * Translate a surface map into a concrete, bounded coverage plan.
+ *
+ * Returns `{ units, dropped }`. `dropped` names the subsystems the profile cap
+ * excluded, so a caller can record them rather than let the plan silently claim
+ * to cover a surface it never enumerated.
+ */
 export function planFromSurface(surfaceMap, { profile = 'standard' } = {}) {
   const limit = PROFILES[profile]?.maxUnits ?? PROFILES.standard.maxUnits;
   const surfaces = inferSurfaces(surfaceMap);
   const units = [];
+  const dropped = new Set();
+  const perSurface = profile === 'deep' ? 12 : 4;
 
   for (const { surface, subsystems } of surfaces) {
     const classes = RELEVANT[surface] ?? ['input-validation'];
     const boundary = DEFAULT_BOUNDARY[surface] ?? 'anonymous-to-application';
     const take = profile === 'quick' ? classes.slice(0, 3) : classes;
 
-    for (const subsystem of subsystems.slice(0, profile === 'deep' ? 12 : 4)) {
+    subsystems.slice(perSurface).forEach((s) => dropped.add(`${surface}:${s}`));
+
+    for (const subsystem of subsystems.slice(0, perSurface)) {
       for (const attackClass of take) {
         units.push(createUnit({
           surface,
@@ -347,7 +394,14 @@ export function planFromSurface(surfaceMap, { profile = 'standard' } = {}) {
     }
   }
 
-  return units.slice(0, limit);
+  // Anything past the overall profile cap is also dropped.
+  for (const unit of units.slice(limit)) dropped.add(`${unit.surface}:${unit.subsystem}`);
+
+  const result = units.slice(0, limit);
+  // Backward compatible: the array is returned directly, with `dropped` attached
+  // as a property for callers (and plan()) that want it.
+  result.dropped = [...dropped];
+  return result;
 }
 
 function inferSurfaces(surfaceMap) {

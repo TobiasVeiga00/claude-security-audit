@@ -143,3 +143,50 @@ test('priority stays inside 0..100 under extreme inputs', () => {
   assert.ok(max.priority <= 100 && max.priority >= 0);
   assert.ok(min.priority <= 100 && min.priority >= 0);
 });
+
+/* ------------------------------------------------------------------ *
+ * Regressions from the Fable scoring-core audit.
+ * ------------------------------------------------------------------ */
+
+test('CVSS v4.0 scores vectors that use the Safety level (MSI:S / MSA:S)', {
+  skip: loadTables() ? false : 'v4 tables not vendored yet',
+}, () => {
+  const r = scoreV40('CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H/MSI:S');
+  assert.equal(r.ok, true, r.reason);
+  assert.equal(r.score, 10.0);
+});
+
+test('CVSS v4.0 rounds half up like FIRST, not toward the binary expansion', {
+  skip: loadTables() ? false : 'v4 tables not vendored yet',
+}, () => {
+  // Raw 5.05 must round to 5.1 (toFixed(1) sent it to 5.0).
+  const r = scoreV40('CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:L/SC:H/SI:H/SA:N');
+  assert.equal(r.score, 5.1);
+});
+
+test('validateV40 accepts modified metrics: MSI:S, MSA:S and M*:X', () => {
+  const base = 'CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N';
+  assert.equal(validateV40(`${base}/MSI:S`).ok, true);
+  assert.equal(validateV40(`${base}/MSA:S`).ok, true);
+  assert.equal(validateV40(`${base}/MAV:X`).ok, true);
+  assert.equal(validateV40(`${base}/MSI:Z`).ok, false, 'a bogus modified value is still rejected');
+});
+
+test('CVSS v3.1 rejects an invalid Scope value rather than defaulting to Unchanged', () => {
+  assert.equal(scoreV31('CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:Z/C:H/I:H/A:H').ok, false);
+});
+
+test('normalizeSeverity maps a numeric CVSS string to its band, not info', () => {
+  assert.equal(normalizeSeverity('9.8'), 'critical');
+  assert.equal(normalizeSeverity('7.5'), 'high');
+  assert.equal(normalizeSeverity('4.0'), 'medium');
+  assert.equal(normalizeSeverity('3'), 'medium', 'the 0-5 ordinal table still wins for a bare digit');
+  assert.equal(normalizeSeverity('nonsense'), 'info');
+});
+
+test('fuseRisk normalises an EPSS value expressed as a percentage', () => {
+  const asPercent = fuseRisk({ severity: 'high', epss: 97.4 });
+  const asProbability = fuseRisk({ severity: 'high', epss: 0.974 });
+  assert.equal(asPercent.priority, asProbability.priority);
+  assert.ok(asPercent.rationale.some((r) => /97\.4%/.test(r)));
+});

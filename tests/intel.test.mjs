@@ -98,3 +98,25 @@ test('request does not retry a 404 (only 429 and 5xx are retryable)', async () =
     /.*/,
   );
 });
+
+test('parseJsObjectLiteral does not corrupt a string containing a trailing-comma shape', () => {
+  const parsed = parseJsObjectLiteral('x = {k: "a,]", j: "b, }"}', 'x');
+  assert.equal(parsed.k, 'a,]');
+  assert.equal(parsed.j, 'b, }');
+});
+
+test('parseJsObjectLiteral anchors to the exact identifier, not a shared prefix', () => {
+  assert.deepEqual(parseJsObjectLiteral('const xy = {b:2}; const x = {a:1}', 'x'), { a: 1 });
+  assert.deepEqual(parseJsObjectLiteral('// x != y\nconst x = {a:1}', 'x'), { a: 1 });
+});
+
+test('readJson strips a UTF-8 BOM (PowerShell / Notepad on Windows)', async () => {
+  const { readJson } = await import('../scripts/lib/util.mjs');
+  const os = await import('node:os');
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const file = path.join(os.tmpdir(), `bom-${Date.now()}.json`);
+  fs.writeFileSync(file, '﻿{"granted": true}');
+  assert.deepEqual(readJson(file, null), { granted: true });
+  fs.unlinkSync(file);
+});

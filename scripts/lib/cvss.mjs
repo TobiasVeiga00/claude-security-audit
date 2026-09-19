@@ -88,6 +88,9 @@ export function scoreV31(vector) {
   for (const key of V31_REQUIRED) {
     if (!(key in m)) return { ok: false, error: `missing base metric ${key}` };
   }
+  if (m.S !== 'U' && m.S !== 'C') {
+    return { ok: false, error: `invalid Scope value S:${m.S}` };
+  }
 
   const scope = m.S === 'C' ? 'C' : 'U';
   const av = V31_METRICS.AV[m.AV];
@@ -166,9 +169,17 @@ export function validateV40(vector) {
     if (!(key in parsed.metrics)) return { ok: false, error: `missing base metric ${key}` };
   }
   for (const [key, value] of Object.entries(parsed.metrics)) {
-    const base = key.startsWith('M') ? key.slice(1) : key;
-    const allowed = V40_VALUES[base];
-    if (allowed && !allowed.includes(value)) {
+    const modified = key.startsWith('M') && key !== 'M';
+    const base = modified ? key.slice(1) : key;
+    let allowed = V40_VALUES[base];
+    if (!allowed) continue;
+    // A modified metric additionally allows X (Not Defined); modified subsequent
+    // integrity/availability additionally allow S (Safety).
+    if (modified) {
+      allowed = [...allowed, 'X'];
+      if (base === 'SI' || base === 'SA') allowed = [...allowed, 'S'];
+    }
+    if (!allowed.includes(value)) {
       return { ok: false, error: `invalid value ${key}:${value}` };
     }
   }
@@ -209,7 +220,13 @@ export function normalizeSeverity(raw) {
     low: 'low', note: 'low', '2': 'low',
     info: 'info', informational: 'info', information: 'info', unknown: 'info', none: 'info', '1': 'info', '0': 'info',
   };
-  return table[value] ?? 'info';
+  if (value in table) return table[value];
+  // A scanner that emits its CVSS score as a string ("9.8", "7.5") must not be
+  // silently downgraded to info. The ordinal 0-5 table above wins first, so
+  // "3" stays medium; a decimal score falls through to the band.
+  const numeric = Number(value);
+  if (value !== '' && Number.isFinite(numeric)) return severityBand(numeric);
+  return 'info';
 }
 
 export function severityRank(severity) {
@@ -254,15 +271,18 @@ export function fuseRisk({
     rationale.push('+18 listed in CISA KEV (confirmed exploitation in the wild)');
   }
 
-  if (typeof epss === 'number' && epss >= 0) {
-    // EPSS is heavily skewed toward zero, so weight the tail, not the mean.
+  if (typeof epss === 'number' && Number.isFinite(epss) && epss >= 0) {
+    // EPSS is a probability in [0,1]. A feed that reports it as a percentage
+    // (0-100) is normalised rather than trusted to hand out the max bonus.
+    const probability = epss > 1 ? Math.min(epss / 100, 1) : epss;
+    // Heavily skewed toward zero, so weight the tail, not the mean.
     let bonus = 0;
-    if (epss >= 0.5) bonus = 14;
-    else if (epss >= 0.1) bonus = 9;
-    else if (epss >= 0.01) bonus = 4;
+    if (probability >= 0.5) bonus = 14;
+    else if (probability >= 0.1) bonus = 9;
+    else if (probability >= 0.01) bonus = 4;
     if (bonus) {
       score += bonus;
-      rationale.push(`+${bonus} EPSS ${(epss * 100).toFixed(1)}% exploitation probability`);
+      rationale.push(`+${bonus} EPSS ${(probability * 100).toFixed(1)}% exploitation probability`);
     }
   }
 

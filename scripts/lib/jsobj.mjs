@@ -19,14 +19,20 @@
  * @param {string} identifier  the global being assigned
  */
 export function parseJsObjectLiteral(source, identifier) {
-  const start = source.indexOf(identifier);
-  if (start === -1) throw new Error(`identifier "${identifier}" not found`);
+  // Anchor to a real assignment `identifier =` (not `==`), on a word boundary,
+  // so a longer identifier sharing the prefix (`xy` when we want `x`) or a
+  // mention inside a comment does not match first.
+  const anchor = new RegExp(`(?:^|[^\\w$.])${escapeRe(identifier)}\\s*=(?!=)`, 'm');
+  const found = anchor.exec(source);
+  if (!found) throw new Error(`assignment to "${identifier}" not found`);
 
-  const eq = source.indexOf('=', start + identifier.length);
-  if (eq === -1) throw new Error(`no assignment found for "${identifier}"`);
-
+  const eq = source.indexOf('=', found.index + found[0].length - 1);
   const body = extractBalanced(source, eq + 1);
   return JSON.parse(toStrictJson(body));
+}
+
+function escapeRe(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /** Read one balanced {...} or [...] literal starting at or after `from`. */
@@ -120,8 +126,36 @@ function toStrictJson(input) {
   // touching anything inside a string, which is already double-quoted.
   out = quoteBareKeys(out);
 
-  // Drop trailing commas before a closing brace or bracket.
-  out = out.replace(/,(\s*[}\]])/g, '$1');
+  // Drop trailing commas before a closing brace or bracket, string-aware so a
+  // string containing `,]` or `,}` is not corrupted.
+  out = stripTrailingCommas(out);
+
+  return out;
+}
+
+/** Remove trailing commas (`,}` / `,]`), skipping over double-quoted strings. */
+function stripTrailingCommas(input) {
+  let out = '';
+  let inString = false;
+
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+
+    if (inString) {
+      out += ch;
+      if (ch === '\\') { out += input[i + 1] ?? ''; i++; continue; }
+      if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') { inString = true; out += ch; continue; }
+
+    if (ch === ',') {
+      let j = i + 1;
+      while (j < input.length && /\s/.test(input[j])) j++;
+      if (input[j] === '}' || input[j] === ']') continue; // drop the comma
+    }
+    out += ch;
+  }
 
   return out;
 }

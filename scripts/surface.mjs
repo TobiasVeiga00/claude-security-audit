@@ -403,9 +403,9 @@ export function mapSurface(root, options = {}) {
 
   // Apply the domain filter BEFORE the budget fill, so the budget is spent on
   // the files the caller actually asked for rather than filtered away after.
-  const domainFilter = domain ? new Set([].concat(domain)) : null;
-  const inScope = domainFilter
-    ? candidates.filter((c) => c.tags.some((t) => domainFilter.has(t)) || c.sinks.some((s) => domainFilter.has(s.set)))
+  const domainTokens = domain ? [].concat(domain) : null;
+  const inScope = domainTokens
+    ? candidates.filter((c) => domainTokens.some((d) => candidateInDomain(c, d)))
     : candidates;
 
   // Fill the budget greedily by score. A file whose estimate alone exceeds the
@@ -458,6 +458,37 @@ export function mapSurface(root, options = {}) {
     secretCandidates: secretHits,
     suggestedDomains: suggestDomains(stack, candidates),
   };
+}
+
+/* Audit-domain nouns -> the signals (tags, sink-sets, sink-id prefixes and
+ * languages) that identify a file for that domain. This is the inverse of
+ * suggestDomains(): it lets `--domain web` actually match candidates. A token
+ * that is not a known domain noun falls through to a literal signal match, so
+ * the raw tags the skills pass (e.g. `--domain entrypoint`) keep working. */
+const DOMAIN_MATCHERS = {
+  web: { signals: ['entrypoint', 'authn'] },
+  api: { signals: ['entrypoint'] },
+  cloud: { signals: ['iac', 'tf', 'k8s', 'docker', 'terraform', 'dockerfile'] },
+  iac: { signals: ['iac', 'tf', 'terraform'] },
+  container: { signals: ['k8s', 'docker', 'dockerfile'] },
+  mobile: { signals: ['kotlin', 'swift', 'dart', 'objc'] },
+  secrets: { secrets: true },
+  dependencies: { signals: ['ci'] },
+  code: { any: true },
+};
+
+function candidateHasSignal(candidate, signal) {
+  return candidate.tags.includes(signal)
+    || candidate.sinks.some((s) => s.set === signal || (s.id && s.id.startsWith(signal)))
+    || candidate.language === signal;
+}
+
+function candidateInDomain(candidate, token) {
+  const matcher = DOMAIN_MATCHERS[token];
+  if (!matcher) return candidateHasSignal(candidate, token);
+  if (matcher.any) return true;
+  if (matcher.secrets) return Boolean(candidate.secrets && candidate.secrets.length);
+  return matcher.signals.some((signal) => candidateHasSignal(candidate, signal));
 }
 
 function suggestDomains(stack, candidates) {

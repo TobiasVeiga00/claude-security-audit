@@ -102,6 +102,41 @@ test('output is deterministic across runs', () => {
   );
 });
 
+/**
+ * Regression: `--domain <noun>` matched only raw tags and sink-sets, so the
+ * documented `--domain web` (and every other audit-domain noun) returned zero
+ * even when the tree obviously belonged to that domain.
+ */
+test('the domain filter accepts audit-domain nouns, not just raw tags', () => {
+  const iac = mapSurface(FIXTURE, { budget: 200000, top: 50, domain: 'iac' });
+  assert.ok(
+    iac.hotspots.some((h) => h.file.endsWith('infra/main.tf')),
+    '--domain iac must select the terraform file',
+  );
+  assert.ok(
+    !iac.hotspots.some((h) => h.file.endsWith('src/api/users.js')),
+    'the iac domain must not pull in application javascript',
+  );
+
+  const container = mapSurface(FIXTURE, { budget: 200000, top: 50, domain: 'container' });
+  assert.ok(
+    container.hotspots.some((h) => h.file.endsWith('Dockerfile')),
+    '--domain container must select the Dockerfile',
+  );
+
+  // Backward compatibility: the raw tag / sink-set tokens the skills pass
+  // (e.g. `--domain entrypoint`) must still filter.
+  const raw = mapSurface(FIXTURE, { budget: 200000, top: 50, domain: 'terraform' });
+  assert.ok(
+    raw.hotspots.some((h) => h.file.endsWith('infra/main.tf')),
+    'a raw sink-set token must still filter',
+  );
+
+  // A domain with no signal in the tree yields an empty, honest result.
+  const mobile = mapSurface(FIXTURE, { budget: 200000, top: 50, domain: 'mobile' });
+  assert.equal(mobile.hotspots.length, 0, 'no mobile code means no mobile hotspots');
+});
+
 /* ---------------------------------------------------------------- *
  * Coverage ledger
  * ---------------------------------------------------------------- */

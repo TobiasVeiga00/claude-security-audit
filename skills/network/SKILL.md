@@ -2,7 +2,7 @@
 name: network
 description: Network and wireless security assessment — host and service discovery, TLS posture, exposed services, and Wi-Fi testing (WPA2/WPA3, PMKID, 802.1X EAP, evil twin, PMF). All active work is gated behind written rules of engagement. Use for "network scan", "port scan", "check my TLS", "Wi-Fi audit", "wireless assessment".
 argument-hint: "[host, range, or --wireless]"
-allowed-tools: Read, Write, AskUserQuestion, Bash(node:*), Bash(nmap:*), Bash(testssl.sh:*), Bash(naabu:*)
+allowed-tools: Read, Write, AskUserQuestion, Bash(node:*), Bash(nmap:*), Bash(testssl.sh:*), Bash(naabu:*), Bash(hcxdumptool:*), Bash(hashcat:*), Bash(hostapd-wpe:*)
 ---
 
 # Network and wireless security

@@ -45,6 +45,13 @@ hotspots and confirm each in context.
   "*"`, wildcard Kubernetes RBAC. Least privilege is the whole game.
 - **Encryption off.** `encrypted = false`, missing KMS keys, disabled key
   rotation, unencrypted storage or transit.
+- **Instance metadata (IMDS) hardening.** On AWS, an instance whose
+  `metadata_options` has `http_tokens = "optional"` (or none set) leaves IMDSv1
+  reachable — the SSRF-to-credential pivot behind the Capital One breach.
+  Require IMDSv2 (`http_tokens = "required"`) and a low
+  `http_put_response_hop_limit` (1). The parallel elsewhere: legacy metadata
+  endpoints on GCP, and unrestricted IMDS reachable from a compromised app on
+  Azure.
 - **Logging off.** No CloudTrail, no flow logs, no audit logging — this is what
   makes an incident un-investigable (OWASP A09:2025).
 - **Secrets in IaC.** Credentials as literals in Terraform, or a Dockerfile

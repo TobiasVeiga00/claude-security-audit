@@ -58,8 +58,36 @@ For every route and handler:
   together with credentials. Check whether the origin check is a substring match
   — `evil-acme.com` passing a check for `acme.com` is a real and common bug.
 - Cookies: `Secure`, `HttpOnly`, `SameSite`, scope, and prefix.
+- **Subresource integrity.** A third-party `<script>` or `<link>` pulled from a
+  CDN without an `integrity` hash — a compromised CDN then executes in your
+  origin (OWASP A03:2025 supply chain, client side).
 - Debug endpoints, stack traces, directory listing, default credentials,
   verbose error pages, exposed actuator or metrics endpoints.
+
+## Cross-site request forgery (CSRF)
+
+State-changing requests authenticated by an ambient credential — a session
+cookie the browser attaches automatically — that a third-party page can trigger
+on the victim's behalf. For every non-idempotent endpoint (`POST`, `PUT`,
+`PATCH`, `DELETE`, or a `GET` that mutates):
+
+- **Is there an anti-CSRF control at all, and is it *verified*?** A synchroniser
+  token, a double-submit cookie, or an origin/referer check — issuing one is not
+  enough; it has to be checked server-side and the request rejected when it is
+  absent or wrong.
+- **`SameSite` on the session cookie.** `Lax` (and the modern browser default)
+  blocks the cross-site top-level `POST`; `None` with no token is exposed;
+  `Strict` is safest but breaks some navigation flows. A cookie-auth API leaning
+  on `SameSite` alone is one browser quirk from exposure.
+- **JSON is not automatically safe.** A form-encoded or `text/plain` body is
+  sendable cross-origin without a preflight; only a content type that forces the
+  preflight, plus a *verified* custom header or token, actually protects it.
+- **State-changing `GET`.** A mutation reachable by `GET` can be fired from an
+  `<img src>`; no token in a form helps once the browser sends the request on
+  its own.
+
+The finding is "state-changing endpoint X has no verified CSRF defence", tagged
+`WSTG-SESS-05`.
 
 ## A05:2025 — Injection
 
@@ -70,6 +98,10 @@ web-specific surface:
   Angular and Svelte escape by default — report only `dangerouslySetInnerHTML`,
   `v-html`, `[innerHTML]`, `{@html}`, `javascript:` URL sinks, or a bypassed
   sanitizer.
+- **Prototype pollution.** User-controlled keys merged into an object (a
+  recursive merge, `Object.assign` over parsed input, `lodash.merge`, a
+  query-string parser) that reaches `__proto__`, `constructor` or `prototype` —
+  a gadget chain can escalate it to XSS or RCE.
 - Template injection in server-rendered views.
 - Header injection and response splitting.
 - Open redirect (CWE-601) — and whether it can be chained into OAuth token theft.

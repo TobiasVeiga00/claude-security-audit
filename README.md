@@ -143,8 +143,11 @@ concrete fix:
 - Evidence, reproduction, and a suggested patch, all in the report.
 
 Reports render as a clean, printable HTML document (Ctrl+P → PDF), a diffable
-Markdown file, SARIF 2.1.0 for GitHub code scanning, and a formula-injection-safe
-CSV for your tracker.
+Markdown file, SARIF 2.1.0 for GitHub code scanning, a formula-injection-safe
+CSV for your tracker, and **OpenVEX** — a standards-based statement of which
+CVEs actually affect you and which are *not affected* because the vulnerable
+code is unreachable, which a downstream scanner (Trivy, and others) can consume
+to suppress the noise.
 
 ## Standards it speaks
 

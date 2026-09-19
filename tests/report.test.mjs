@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { FindingStore } from '../scripts/lib/findings.mjs';
-import { buildModel, renderMarkdown, renderHtml, renderSarif, renderCsv, riskPosture } from '../scripts/report.mjs';
+import { buildModel, renderMarkdown, renderHtml, renderSarif, renderCsv, renderVex, riskPosture } from '../scripts/report.mjs';
 
 const SAMPLE = [
   {
@@ -201,6 +201,24 @@ test('csv neutralises spreadsheet formula injection', () => {
   const csv = renderCsv(m);
   assert.ok(csv.includes(`"'=HYPERLINK`), 'a leading = must be prefixed so Excel does not evaluate it');
   assert.ok(csv.split('\n')[0].startsWith('id,severity,priority'));
+});
+
+test('openvex output maps reachability to VEX status', () => {
+  const vex = renderVex(model());
+  assert.equal(vex['@context'], 'https://openvex.dev/ns/v0.2.0');
+  const affected = vex.statements.find((s) => s.vulnerability.name === 'CVE-2021-44228');
+  assert.ok(affected, 'a CVE finding produces a VEX statement');
+  assert.equal(affected.status, 'affected', 'a reachable / unqualified CVE is affected');
+
+  // A finding proven unreachable becomes a standards-based not_affected — the
+  // portable form of our reachability signal that a downstream scanner honours.
+  const unreachable = buildModel(
+    [{ title: 'x', severity: 'high', verdict: 'confirmed', domain: 'dependencies', cve: ['CVE-2000-0001'], location: { package: 'p@1' }, reachable: false }],
+    { scope: null, meta: {} },
+  );
+  const st = renderVex(unreachable).statements.find((s) => s.vulnerability.name === 'CVE-2000-0001');
+  assert.equal(st.status, 'not_affected');
+  assert.equal(st.justification, 'vulnerable_code_not_in_execute_path');
 });
 
 test('markdown code fences survive backticks inside evidence', () => {

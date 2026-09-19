@@ -86,12 +86,44 @@ test('importers degrade to an empty list on schema drift instead of throwing', (
     ['grype', '{"matches":{}}'],
     ['osv-scanner', '{"results":[{"packages":{}}]}'],
     ['kics', '{"queries":[{"files":{}}]}'],
+    ['prowler', '{"findings":{}}'],
+    ['prowler', '[null]'],
     ['gitleaks', '[null]'],
     ['nuclei', 'not json at all'],
   ];
   for (const [tool, raw] of cases) {
     assert.doesNotThrow(() => importScannerOutput(tool, raw), `${tool} threw on ${raw}`);
   }
+});
+
+test('prowler json-ocsf imports FAILs, skips PASSes, and reads OCSF severity', () => {
+  const raw = JSON.stringify([
+    {
+      status_code: 'FAIL',
+      severity_id: 4,
+      finding_info: { title: 'S3 bucket is public', desc: 'Bucket allows public read', uid: 'prowler-s3-1' },
+      resources: [{ uid: 'arn:aws:s3:::my-bucket', region: 'us-east-1', type: 'AwsS3Bucket' }],
+      cloud: { provider: 'aws' },
+      remediation: { desc: 'Block public access', references: ['https://docs.aws.amazon.com/s3'] },
+      unmapped: { check_id: 's3_bucket_public_access' },
+    },
+    {
+      status_code: 'PASS',
+      severity_id: 1,
+      finding_info: { title: 'Passing check' },
+      resources: [{ uid: 'arn:aws:s3:::ok' }],
+    },
+  ]);
+  const findings = importScannerOutput('prowler', raw);
+  assert.equal(findings.length, 1, 'only the FAIL becomes a finding');
+  const [f] = findings;
+  assert.equal(f.title, 'S3 bucket is public');
+  assert.equal(f.severity, 'high', 'OCSF severity_id 4 maps to high');
+  assert.equal(f.domain, 'cloud');
+  assert.equal(f.location.resource, 'arn:aws:s3:::my-bucket');
+  assert.equal(f.location.region, 'us-east-1');
+  assert.equal(f.location.provider, 'aws');
+  assert.equal(f.source.rule, 's3_bucket_public_access');
 });
 
 test('SARIF result kinds map correctly', () => {

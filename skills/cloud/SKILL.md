@@ -77,11 +77,14 @@ Requires an authenticated session and rules of engagement:
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/scope.mjs" check "prowler aws"
 prowler aws -M json-ocsf -o .security-audit/prowler 2>/dev/null
+node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" import --tool prowler --file .security-audit/prowler/<output>.ocsf.json
 ```
 
 Prowler is the primary multi-cloud posture tool (AWS, Azure, GCP, Kubernetes,
-M365) with CIS, PCI, NIST and ISO mappings built in. Its output is large — read
-the failed checks, rank by the criteria below, and never paste the whole report.
+M365) with CIS, PCI, NIST and ISO mappings built in. Its output is large, so the
+`prowler` importer parses the OCSF file into the ledger (keeping only the FAILs)
+rather than letting the raw report into the conversation. Then rank by the
+criteria below; never paste the whole report.
 
 Ranking for live findings: internet-reachable before internal · data-bearing
 before empty · identity and key management before everything else · a finding

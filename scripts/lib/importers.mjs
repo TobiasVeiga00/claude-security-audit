@@ -20,7 +20,7 @@ import { normalizeSeverity } from './cvss.mjs';
 
 export const SUPPORTED_IMPORTERS = [
   'sarif', 'semgrep', 'gitleaks', 'trufflehog', 'trivy', 'grype',
-  'osv-scanner', 'checkov', 'bandit', 'npm-audit', 'nuclei', 'kics',
+  'osv-scanner', 'checkov', 'bandit', 'npm-audit', 'nuclei', 'kics', 'prowler',
 ];
 
 export function importScannerOutput(tool, raw, { root = process.cwd() } = {}) {
@@ -38,6 +38,7 @@ export function importScannerOutput(tool, raw, { root = process.cwd() } = {}) {
     case 'osv-scanner': return fromOsvScanner(parse(), root);
     case 'checkov': return fromCheckov(parse(), root);
     case 'kics': return fromKics(parse(), root);
+    case 'prowler': return fromProwler(parse());
     case 'bandit': return fromBandit(parse(), root);
     case 'npm-audit': return fromNpmAudit(parse());
     case 'nuclei': return fromNuclei(raw);
@@ -390,6 +391,51 @@ function fromKics(data, root) {
         source: { tool: 'kics', rule: query.query_id ?? '' },
       });
     }
+  }
+  return out;
+}
+
+// OCSF severity_id -> our scale. Prowler's json-ocsf carries both a numeric id
+// and a string; the id is authoritative when present.
+const OCSF_SEVERITY = { 0: 'info', 1: 'info', 2: 'low', 3: 'medium', 4: 'high', 5: 'critical', 6: 'critical' };
+
+/**
+ * Prowler `-M json-ocsf` (the cloud skill's recommended output). An array of
+ * OCSF Detection Findings; only FAILs are findings. Defensive against the field
+ * drift between Prowler 3/4/5 — a missing field degrades one finding, never the
+ * whole import.
+ */
+function fromProwler(data) {
+  const findings = Array.isArray(data) ? data : arr(data?.findings);
+  const out = [];
+  for (const f of findings) {
+    if (!f || typeof f !== 'object') continue;
+    const status = str(f.status_code || f.status).toUpperCase();
+    if (status && status !== 'FAIL' && status !== 'FAILURE') continue;
+    const info = f.finding_info ?? {};
+    const resource = arr(f.resources)[0] ?? {};
+    const unmapped = f.unmapped ?? {};
+    const cloud = f.cloud ?? {};
+    const severity = OCSF_SEVERITY[f.severity_id] ?? normalizeSeverity(str(f.severity) || 'medium');
+    const detail = str(f.status_detail || f.risk_details || f.message);
+    out.push({
+      title: str(info.title || unmapped.check_title || f.message || 'Prowler finding'),
+      severity: normalizeSeverity(severity),
+      confidence: 'firm',
+      domain: 'cloud',
+      description: str(info.desc || f.risk_details || f.message),
+      location: {
+        resource: str(resource.uid || resource.name) || null,
+        region: str(resource.region || cloud.region || f.region) || null,
+        provider: str(cloud.provider || unmapped.provider) || null,
+      },
+      evidence: detail ? [{ type: 'note', content: detail.slice(0, 500) }] : [],
+      remediation: {
+        summary: str(f.remediation?.desc || f.remediation?.description),
+        references: arr(f.remediation?.references).map(str).filter(Boolean),
+      },
+      source: { tool: 'prowler', rule: str(unmapped.check_id || f.metadata?.event_code || info.uid) },
+    });
   }
   return out;
 }

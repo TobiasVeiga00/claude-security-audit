@@ -5,6 +5,20 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.3.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.2.0...v1.3.0) (2026-09-19)
+
+
+### Features
+
+* **importers:** native Prowler (OCSF) importer ([ec2d94a](https://github.com/TobiasVeiga00/claude-security-audit/commit/ec2d94a8c772b4c5d350460d6951783984b053d7))
+* **importers:** native Prowler (OCSF) importer ([ee6d326](https://github.com/TobiasVeiga00/claude-security-audit/commit/ee6d32658f3c86c2561267dbd422e62fceb42d5d))
+
+
+### Bug Fixes
+
+* **skills:** make inline preambles shell-neutral for Windows/PowerShell ([23eb35a](https://github.com/TobiasVeiga00/claude-security-audit/commit/23eb35ae3019358419af12f44704aabcc44a050d))
+* **skills:** make inline preambles shell-neutral for Windows/PowerShell ([1a4354f](https://github.com/TobiasVeiga00/claude-security-audit/commit/1a4354f4d33997caf79b15b82c9100cec2c74fab))
+
 ## [1.2.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.1.0...v1.2.0) (2026-09-19)
 
 

@@ -10,8 +10,9 @@ allowed-tools: Read, Edit, Write, Glob, Grep, Bash(node:*), Bash(git:*)
 Fix confirmed findings — carefully, one at a time, and never in a way that trades
 a security bug for a functional one.
 
-Open findings, highest priority first:
-!`node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" list --status open --limit 25 2>&1`
+Open findings, highest priority first (confirmed findings the validator marked
+`triaged` are included, not just `open`):
+!`node "${CLAUDE_PLUGIN_ROOT}/scripts/finding.mjs" list --status open,triaged,retest-pending --limit 25 2>&1`
 
 ---
 

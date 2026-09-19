@@ -37,6 +37,16 @@ test('the generated tag does not swallow real source', () => {
   }
 });
 
+test('the llm path signal matches LLM code but not a user-agent or blockchain file', () => {
+  const re = pathSig('llm').re;
+  for (const ok of ['src/llm/completion.js', 'lib/prompt.py', 'app/openai-client.ts', 'rag/vectorstore.js']) {
+    assert.equal(hits(re, ok), true, `${ok} should be tagged llm`);
+  }
+  for (const no of ['src/user-agent.js', 'src/blockchain.js', 'src/toolchain.ts']) {
+    assert.equal(hits(re, no), false, `${no} must not be tagged llm`);
+  }
+});
+
 test('py.eval does not fire on re.compile but does on eval', () => {
   const re = sink('python', 'py.eval').re;
   assert.equal(hits(re, 'pattern = re.compile(r"x")'), false);

@@ -237,7 +237,7 @@ function renderMarkdown(model) {
     p('### What to fix first', '');
     const top = [...model.bySeverity.critical, ...model.bySeverity.high].slice(0, 8);
     for (const f of top) {
-      p(`1. **${escapeMd(f.title)}** (${f.id}, ${f.risk?.tier ?? 'P?'}) — ${escapeMd(truncate(f.impact || f.description, 200))}`);
+      p(`1. **${escapeMd(f.title)}** (${f.id}, ${f.risk?.tier ?? 'P?'}) — ${escapeMd(truncate(f.impact || f.boundary?.result || f.description || f.remediation?.summary || 'see the finding detail', 200))}`);
     }
     p('');
   }

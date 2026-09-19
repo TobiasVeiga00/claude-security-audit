@@ -474,6 +474,7 @@ const DOMAIN_MATCHERS = {
   mobile: { signals: ['kotlin', 'swift', 'dart', 'objc'] },
   secrets: { secrets: true },
   dependencies: { signals: ['ci'] },
+  llm: { signals: ['llm', 'entrypoint'] },
   code: { any: true },
 };
 
@@ -560,8 +561,8 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
         `scan ${result.scanId}  (${result.durationMs} ms)`,
         `stack: ${result.stack.markers.join(', ') || 'unknown'}`,
         `languages: ${Object.entries(result.stack.languages).slice(0, 6).map(([k, v]) => `${k}:${v}`).join(' ')}`,
-        `walked ${i.filesWalked} files (~${i.estTokensIfReadEntirely.toLocaleString()} tokens if read whole)`,
-        `selected ${b.filesSelected} files (~${b.usedTokens.toLocaleString()} tokens) => ${b.reductionPercent}% reduction`,
+        `walked ${i.filesWalked} files (~${i.estTokensIfReadEntirely.toLocaleString('en-US')} tokens if read whole)`,
+        `selected ${b.filesSelected} files (~${b.usedTokens.toLocaleString('en-US')} tokens) => ${b.reductionPercent}% reduction`,
         `secret candidates: ${result.secretCandidates.length}`,
         `suggested domains: ${result.suggestedDomains.join(', ')}`,
       ].join('\n') + '\n',

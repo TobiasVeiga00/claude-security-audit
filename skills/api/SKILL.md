@@ -17,7 +17,7 @@ Read `${CLAUDE_PLUGIN_ROOT}/references/methodology.md` and
 !`node "${CLAUDE_PLUGIN_ROOT}/scripts/surface.mjs" $ARGUMENTS --budget 150000 --domain entrypoint --summary`
 
 API descriptions present:
-!`ls -1 openapi.yaml openapi.json swagger.json schema.graphql 2>/dev/null || echo "(none at root — search the tree for a schema)"`
+!`node -e "const fs=require('fs');const names=['openapi.yaml','openapi.yml','openapi.json','swagger.yaml','swagger.json','schema.graphql','schema.gql'];const found=names.filter(n=>fs.existsSync(n));console.log(found.length?found.join('\n'):'(none at root — search the tree for a schema)');"`
 
 ---
 

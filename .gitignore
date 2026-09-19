@@ -19,3 +19,7 @@ tmp/
 
 # Local agent tooling state, not part of the plugin
 .atl/
+
+# Stray gzipped feed dumps must never be committed
+*.gz
+!intel/**/*.gz

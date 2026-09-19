@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { mapSurface } from '../scripts/surface.mjs';
+import { mapSurface, resolveBudget } from '../scripts/surface.mjs';
 import { planFromSurface, CoverageLedger } from '../scripts/lib/coverage.mjs';
 
 const FIXTURE = path.join(
@@ -136,6 +136,35 @@ test('the domain filter accepts audit-domain nouns, not just raw tags', () => {
   // A domain with no signal in the tree yields an empty, honest result.
   const mobile = mapSurface(FIXTURE, { budget: 200000, top: 50, domain: 'mobile' });
   assert.equal(mobile.hotspots.length, 0, 'no mobile code means no mobile hotspots');
+});
+
+/**
+ * The flagship audit passes `--budget ${user_config.token_budget}`. If the host
+ * does not substitute that token, surface.mjs used to abort the whole audit;
+ * the budget must degrade gracefully instead.
+ */
+test('the budget resolver never aborts on an unsubstituted config token', () => {
+  const prev = process.env.CLAUDE_PLUGIN_OPTION_TOKEN_BUDGET;
+  delete process.env.CLAUDE_PLUGIN_OPTION_TOKEN_BUDGET;
+  try {
+    assert.equal(resolveBudget('200000', { warn: false }), 200000, 'a valid budget is honored');
+    assert.equal(
+      resolveBudget('${user_config.token_budget}', { warn: false }),
+      180000,
+      'an unsubstituted token falls back to the default, not a crash',
+    );
+    assert.equal(resolveBudget(undefined, { warn: false }), 180000, 'absent falls back to the default');
+
+    process.env.CLAUDE_PLUGIN_OPTION_TOKEN_BUDGET = '90000';
+    assert.equal(
+      resolveBudget('${user_config.token_budget}', { warn: false }),
+      90000,
+      'the plugin-config env var is the fallback before the default',
+    );
+  } finally {
+    if (prev === undefined) delete process.env.CLAUDE_PLUGIN_OPTION_TOKEN_BUDGET;
+    else process.env.CLAUDE_PLUGIN_OPTION_TOKEN_BUDGET = prev;
+  }
 });
 
 /* ---------------------------------------------------------------- *

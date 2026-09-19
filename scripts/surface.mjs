@@ -508,6 +508,26 @@ function suggestDomains(stack, candidates) {
  * CLI
  * ------------------------------------------------------------------ */
 
+/* Resolve the surface token budget defensively. The flagship audit skill passes
+ * `--budget ${user_config.token_budget}`; if the host does not substitute that
+ * token inside the command block, surface.mjs would otherwise receive the
+ * literal string and abort the entire audit at step 2. Prefer a valid --budget,
+ * then the CLAUDE_PLUGIN_OPTION_TOKEN_BUDGET env var the plugin config also
+ * exports, then the default — warning rather than failing on an unusable value. */
+export function resolveBudget(value, { warn = true } = {}) {
+  const positive = (v) => {
+    if (v === undefined || v === null || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+  const fromArg = positive(value);
+  if (fromArg !== null) return fromArg;
+  if (value !== undefined && warn) {
+    process.stderr.write(`surface: ignoring unusable --budget "${value}", falling back to config/default\n`);
+  }
+  return positive(process.env.CLAUDE_PLUGIN_OPTION_TOKEN_BUDGET) ?? 180000;
+}
+
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('surface.mjs')) {
   const args = parseArgs();
   const root = args._[0] ?? process.cwd();
@@ -518,7 +538,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     return n;
   };
   const result = mapSurface(root, {
-    budget: numeric(args.budget, 180000, 'budget'),
+    budget: resolveBudget(args.budget),
     top: numeric(args.top, 120, 'top'),
     includeTests: args['include-tests'] === true,
     domain: args.domain ?? null,

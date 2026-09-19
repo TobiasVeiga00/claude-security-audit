@@ -2,7 +2,7 @@
 
 # Claude Security Audit
 
-**A complete security auditor for [Claude Code](https://claude.com/claude-code) — web, API, mobile, cloud, wireless, code, secrets, dependencies, IaC, containers and LLM apps, in one plugin.**
+**A complete security auditor for [Claude Code](https://claude.com/claude-code) — web, API, mobile, cloud, wireless, code, secrets, dependencies, IaC, containers, LLM apps and the agent/MCP supply chain, in one plugin.**
 
 It reads your attack surface, hunts with domain specialists, refutes its own findings, ranks them by real-world exploitation, and writes you a report you can hand to a client.
 
@@ -53,6 +53,7 @@ its own:
 | `/security-audit:deps` | Supply chain — vulnerable dependencies, ranked by exploitability. |
 | `/security-audit:secrets` | Committed credentials, plus the correct leak response. |
 | `/security-audit:llm` | Prompt injection and agentic risk (OWASP GenAI 2025). |
+| `/security-audit:agents` | **Agent supply chain** — MCP servers, plugins, skills, hooks: tool poisoning, unpinned/remote servers, secrets in config, over-broad permissions. |
 | `/security-audit:network` | Network and Wi-Fi assessment (scope-gated). |
 | `/security-audit:scope` | Define rules of engagement before any active testing. |
 | `/security-audit:report` | Regenerate the report from the current findings. |
@@ -120,6 +121,14 @@ forever.
 **It scores CVSS correctly.** v3.1 exactly to the FIRST specification; v4.0 using
 FIRST's official MacroVector tables, validated against published NVD scores — and
 it refuses to guess a score when the tables are absent rather than invent one.
+
+**It audits the agent, not just the app.** The plugins, MCP servers, skills and
+hooks your coding agent loads run with its full authority — a poisoned tool
+description, an unpinned server, or a `curl | sh` hook compromises *you*, not the
+code under review. `/security-audit:agents` scans that supply chain for tool
+poisoning, prompt injection in tool and skill descriptions, remote or unpinned
+MCP servers, secrets in config, and over-broad tool grants. It is the surface the
+rest of the field does not cover from inside the agent.
 
 **It will not test what you are not allowed to test.** Static analysis of your
 own code is always free. Anything that puts a packet on a wire — a scan, a fuzz,

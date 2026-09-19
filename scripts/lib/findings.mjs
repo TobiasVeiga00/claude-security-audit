@@ -22,7 +22,7 @@ import { normalizeSeverity, severityRank, fuseRisk, scoreV31 } from './cvss.mjs'
 
 export const DOMAINS = [
   'web', 'api', 'mobile', 'network', 'wireless', 'cloud', 'code',
-  'secrets', 'dependencies', 'iac', 'container', 'llm', 'identity', 'process',
+  'secrets', 'dependencies', 'iac', 'container', 'llm', 'agents', 'identity', 'process',
 ];
 
 export const CONFIDENCE = ['tentative', 'firm', 'confirmed'];

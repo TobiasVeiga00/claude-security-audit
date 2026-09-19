@@ -37,6 +37,7 @@ test('dangerous sinks are located in application code', () => {
 test('infrastructure and container misconfiguration are located', () => {
   assert.ok(sinkIds('infra/main.tf').includes('tf.open-ingress'));
   assert.ok(sinkIds('infra/main.tf').includes('tf.public-bucket'));
+  assert.ok(sinkIds('infra/main.tf').includes('tf.imdsv1'), 'IMDSv1 metadata option');
   const docker = sinkIds('Dockerfile');
   for (const id of ['docker.latest', 'docker.secret', 'docker.insecure-fetch', 'docker.pipe-shell', 'docker.root']) {
     assert.ok(docker.includes(id), `expected ${id}`);

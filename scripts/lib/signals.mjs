@@ -217,6 +217,7 @@ export const SINK_SIGNALS = {
     { id: 'tf.no-logging', re: /logging\s*\{\s*\}|enable_logging\s*=\s*false|cloudwatch_logs_enabled\s*=\s*false/, weight: 20, cwe: 'CWE-778', hint: 'audit logging disabled' },
     { id: 'tf.hardcoded', re: /(access_key|secret_key|password|token)\s*=\s*"[^"$\n]{8,}"/, weight: 36, cwe: 'CWE-798', hint: 'credential literal in IaC' },
     { id: 'tf.public-db', re: /publicly_accessible\s*=\s*true|public_network_access_enabled\s*=\s*true/, weight: 34, cwe: 'CWE-284', hint: 'database reachable from the internet' },
+    { id: 'tf.imdsv1', re: /http_tokens\s*=\s*"optional"/, weight: 26, cwe: 'CWE-918', hint: 'IMDSv1 left reachable (SSRF-to-credentials); require IMDSv2 http_tokens = "required"' },
   ],
 
   yaml: [

@@ -8,3 +8,11 @@ resource "aws_security_group_rule" "open" {
 resource "aws_s3_bucket_acl" "public" {
   acl = "public-read"
 }
+
+resource "aws_instance" "web" {
+  ami           = "ami-123456"
+  instance_type = "t3.micro"
+  metadata_options {
+    http_tokens = "optional"
+  }
+}

@@ -5,6 +5,25 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.0.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.0.0...v1.0.0) (2026-09-19)
+
+
+### Features
+
+* deterministic audit engine with CVSS, coverage and authorization gate ([f97e25b](https://github.com/TobiasVeiga00/claude-security-audit/commit/f97e25b84b7bde524e8448950df85b5f59648a3d))
+* skills, domain agents, importers and hooks ([439c5c2](https://github.com/TobiasVeiga00/claude-security-audit/commit/439c5c22f89b3544c21eac527979d95448ab6bda))
+
+
+### Bug Fixes
+
+* **ci:** drop redundant type:module so node -e inline checks work ([8f6c2ca](https://github.com/TobiasVeiga00/claude-security-audit/commit/8f6c2caf8aeccf829b4f1474514ef94cbfe6cab3))
+* **ci:** run tests via a shell-expanded glob for Node 18 and 20 ([7a41110](https://github.com/TobiasVeiga00/claude-security-audit/commit/7a4111054e2f5fb806aefb248d26aa1aa782d395))
+
+
+### Miscellaneous
+
+* bootstrap first release at 1.0.0 ([bc52f36](https://github.com/TobiasVeiga00/claude-security-audit/commit/bc52f36f6b66c35f1eaaeef762ddd1f7945b80fe))
+
 ## 1.0.0
 
 The first release.

@@ -5,6 +5,28 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.1.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.0.1...v1.1.0) (2026-09-19)
+
+
+### Features
+
+* **ledger:** expose incremental diff and a CI severity gate ([e6dfa5d](https://github.com/TobiasVeiga00/claude-security-audit/commit/e6dfa5dc9f436d19a598f2b2aa946846e5b70110))
+* **ledger:** expose incremental diff and a CI severity gate ([ff95a0b](https://github.com/TobiasVeiga00/claude-security-audit/commit/ff95a0b3488c66e53c7821fb9eba08555a2d5ba9))
+* **web,cloud:** add CSRF, client-side integrity and IMDSv2 coverage ([5ca6932](https://github.com/TobiasVeiga00/claude-security-audit/commit/5ca69324d8144a95ce9039c08bcc6381a5400066))
+* **web,cloud:** add CSRF, client-side integrity and IMDSv2 coverage ([eabde29](https://github.com/TobiasVeiga00/claude-security-audit/commit/eabde29f6b161cf826576f989a8edf987f741e16))
+
+
+### Bug Fixes
+
+* **intel:** body-timeout, KEV availability, materiality memory and CI on bot PRs ([3702ce9](https://github.com/TobiasVeiga00/claude-security-audit/commit/3702ce96dd61535c30572e3b2679c34b0e5d666c))
+* **intel:** body-timeout, KEV availability, materiality memory and CI on bot PRs ([b42c492](https://github.com/TobiasVeiga00/claude-security-audit/commit/b42c492190541d5ddb9d21962bbb2977c82a1dc8))
+* **report,docs:** correct LLM Top 10 edition, harden report, fix skill args ([7cea633](https://github.com/TobiasVeiga00/claude-security-audit/commit/7cea63322936a1024d9540bce7a8a06c2af3c3aa))
+* **report,docs:** correct LLM Top 10 edition, harden report, fix skill args ([cef2bd8](https://github.com/TobiasVeiga00/claude-security-audit/commit/cef2bd8cae560ced0834129e89bf796bea336e16))
+* **surface,skills:** honor audit-domain nouns and allow advertised intrusive tools ([aa71fd0](https://github.com/TobiasVeiga00/claude-security-audit/commit/aa71fd03bf6ae64130feb73ece315fd24fc3454d))
+* **surface,skills:** honor audit-domain nouns and allow advertised intrusive tools ([58c0e29](https://github.com/TobiasVeiga00/claude-security-audit/commit/58c0e296676f473d0061818e33c33bd6d8a941df))
+* **surface:** resolve the token budget defensively so the audit never aborts ([3e525bf](https://github.com/TobiasVeiga00/claude-security-audit/commit/3e525bfee742dbcb3981b545b2126623d320c814))
+* **surface:** resolve the token budget defensively so the audit never aborts ([7020de8](https://github.com/TobiasVeiga00/claude-security-audit/commit/7020de84435ad01f279c777b87a5179309f254e3))
+
 ## [1.0.1](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.0.0...v1.0.1) (2026-09-19)
 
 

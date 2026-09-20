@@ -17,8 +17,18 @@ It reads your attack surface, hunts with domain specialists, refutes its own fin
 
 ## Install
 
+Two steps — **copy one line at a time** (each block is a single command; pasting
+both at once will not work):
+
+Add the marketplace:
+
 ```
 /plugin marketplace add TobiasVeiga00/claude-security-audit
+```
+
+Then install the plugin:
+
+```
 /plugin install security-audit@claude-security-audit
 ```
 
@@ -39,8 +49,11 @@ Answer four questions once (scope, depth, domains, report format), then walk
 away. When it finishes you have a report in `.security-audit/report/` as
 Markdown, printable HTML, SARIF and CSV.
 
-That single command orchestrates everything below. You can also run any piece on
-its own:
+That one command orchestrates everything. **It is the only one most people ever
+need** — start typing `/security-audit` and let Claude Code complete it for you.
+
+<details>
+<summary><b>Want to run a single check on its own? The full command list →</b></summary>
 
 | Command | What it does |
 | --- | --- |
@@ -59,18 +72,26 @@ its own:
 | `/security-audit:report` | Regenerate the report from the current findings. |
 | `/security-audit:fix` | Generate and apply remediation patches, with a safety gate. |
 
+</details>
+
 ## Staying current
 
-Update your installed copy to the latest release:
+Update your installed copy to the latest release — again, **one line at a time**.
+
+Refresh the marketplace:
 
 ```
 /plugin marketplace update claude-security-audit
+```
+
+Then reload:
+
+```
 /reload-plugins
 ```
 
-(or restart Claude Code). Updates arrive whenever the plugin's version is
-bumped for a release; the command above refreshes the marketplace so the newer
-version is picked up.
+(or just restart Claude Code). Updates arrive whenever the plugin's version is
+bumped for a release; refreshing the marketplace is what picks up the newer one.
 
 Its threat intelligence stays fresh on two layers, so you are never auditing
 against last year's data between updates:

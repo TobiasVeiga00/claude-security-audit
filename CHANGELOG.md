@@ -5,6 +5,13 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Releases are cut
 automatically from [Conventional Commits](https://www.conventionalcommits.org/).
 
+## [1.5.1](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.5.0...v1.5.1) (2026-09-20)
+
+
+### Bug Fixes
+
+* **scope:** gate unclassified network clients, keep ordinary commands out ([#33](https://github.com/TobiasVeiga00/claude-security-audit/issues/33)) ([e6dd90d](https://github.com/TobiasVeiga00/claude-security-audit/commit/e6dd90daec06f3419756a849da9a0bf1b8a77a8f))
+
 ## [1.5.0](https://github.com/TobiasVeiga00/claude-security-audit/compare/v1.4.0...v1.5.0) (2026-09-19)
 
 

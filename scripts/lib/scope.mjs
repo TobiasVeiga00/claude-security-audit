@@ -369,7 +369,13 @@ export function matchesScope(target, scope) {
  */
 export function normalizeForClassification(command) {
   return String(command)
-    .replace(/['"]/g, '')       // n"m"ap -> nmap
+    // A tool name inside a WHOLE quoted argument — a commit message, an echoed
+    // string, a -m/-c value — is data, not an invocation, so drop the argument
+    // wholesale before classifying. A quote in the MIDDLE of a token (the
+    // `n"m"ap` obfuscation) is not a whole argument and survives to the
+    // quote-strip below, so obfuscation is still caught.
+    .replace(/(^|[\s=(])(["'`])(?:\\.|(?!\2)[\s\S])*\2(?=[\s;&|)]|$)/g, '$1 ')
+    .replace(/['"`]/g, '')      // n"m"ap -> nmap
     .replace(/[/\\]/g, ' ')     // /usr/bin/nmap -> ' usr bin nmap'
     .replace(/\s+/g, ' ')
     .toLowerCase();
@@ -438,7 +444,7 @@ export function evaluateCommand(command, cwd = process.cwd()) {
   // or after a shell operator), not merely as a word inside an argument, so
   // ordinary commands — `git add scope.mjs`, `node --test`, a commit message
   // mentioning a URL — are NOT swept into the gate.
-  if (!cls && NETWORK_CLIENT.test(command) && extractTargets(command).some((t) => !isLocalTarget(t))) {
+  if (!cls && NETWORK_CLIENT.test(normalizeForClassification(command)) && extractTargets(command).some((t) => !isLocalTarget(t))) {
     cls = 'network';
   }
 

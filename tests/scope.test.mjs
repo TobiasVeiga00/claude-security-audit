@@ -134,6 +134,27 @@ test('an unclassified network command is still scope-checked when authorized', (
   assert.equal(evaluateCommand('curl https://not-in-scope.example.com', dir).decision, 'deny');
 });
 
+/**
+ * Regression (dogfood): the gate matched a tool/client name wherever it appeared
+ * as a token — including inside a quoted commit message or an echoed string —
+ * and blocked ordinary developer commands. A name inside a whole quoted argument
+ * is data, not an invocation, and must not be gated.
+ */
+test('a tool or client name inside a quoted argument is not an invocation', () => {
+  const dir = withScope(null);
+  for (const cmd of [
+    'git commit -m "fix remote host handling in the ssh path"',
+    'echo "run nmap against the box later"',
+    'git commit -m "see https://example.com for curl usage"',
+  ]) {
+    assert.equal(evaluateCommand(cmd, dir).decision, 'allow', cmd);
+  }
+  // A real, unquoted invocation is still gated, and obfuscation is still caught.
+  assert.equal(evaluateCommand('nmap -sV example.com', dir).decision, 'deny');
+  assert.equal(evaluateCommand('curl https://example.com', dir).decision, 'deny');
+  assert.equal(evaluateCommand('n"m"ap example.com', dir).decision, 'deny');
+});
+
 test('out-of-scope targets are denied even under a valid engagement', () => {
   const dir = withScope(AUTHORIZED);
   for (const cmd of ['nmap -sV payments.acme.com', 'nmap -sV google.com', 'nmap -sV 203.0.113.201']) {

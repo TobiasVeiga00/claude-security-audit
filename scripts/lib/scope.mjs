@@ -369,7 +369,13 @@ export function matchesScope(target, scope) {
  */
 export function normalizeForClassification(command) {
   return String(command)
-    .replace(/['"]/g, '')       // n"m"ap -> nmap
+    // A tool name inside a WHOLE quoted argument — a commit message, an echoed
+    // string, a -m/-c value — is data, not an invocation, so drop the argument
+    // wholesale before classifying. A quote in the MIDDLE of a token (the
+    // `n"m"ap` obfuscation) is not a whole argument and survives to the
+    // quote-strip below, so obfuscation is still caught.
+    .replace(/(^|[\s=(])(["'`])(?:\\.|(?!\2)[\s\S])*\2(?=[\s;&|)]|$)/g, '$1 ')
+    .replace(/['"`]/g, '')      // n"m"ap -> nmap
     .replace(/[/\\]/g, ' ')     // /usr/bin/nmap -> ' usr bin nmap'
     .replace(/\s+/g, ' ')
     .toLowerCase();
@@ -421,8 +427,26 @@ const RULE_FOR_CLASS = {
  * Returns { decision: 'allow' | 'deny' | 'ask', reason, class, tools, targets }.
  * `ask` is never silently upgraded to `allow` anywhere in this plugin.
  */
+// Network clients that are not named security tools but still send a packet at a
+// target. Anchored to a command position so it does not match the word inside an
+// argument or a commit message.
+const NETWORK_CLIENT = /(^|[\s;&|(`])(curl|wget|scp|sftp|ssh|openssl|ncat|netcat|nc|telnet|Invoke-WebRequest|iwr)($|[\s;&|)`])/i;
+
 export function evaluateCommand(command, cwd = process.cwd()) {
-  const { class: cls, tools } = classify(command);
+  const { class: classified, tools } = classify(command);
+  let cls = classified;
+
+  // A network client that is not in the security-tool catalogue still puts a
+  // packet on a wire — curl / wget / scp / ssh / openssl / nc / telnet /
+  // Invoke-WebRequest. An UNCLASSIFIED command that actually invokes one of
+  // these AND reaches a non-local target is gated like intrusive activity
+  // instead of failing open. The client must appear at a command position (start
+  // or after a shell operator), not merely as a word inside an argument, so
+  // ordinary commands — `git add scope.mjs`, `node --test`, a commit message
+  // mentioning a URL — are NOT swept into the gate.
+  if (!cls && NETWORK_CLIENT.test(normalizeForClassification(command)) && extractTargets(command).some((t) => !isLocalTarget(t))) {
+    cls = 'network';
+  }
 
   if (!cls || cls === 'local') {
     return { decision: 'allow', class: cls ?? 'none', tools, targets: [], reason: 'static analysis of local artefacts' };

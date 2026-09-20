@@ -113,6 +113,18 @@ jobs:
             threat-intel
             ${{ steps.sync.outputs.material == 'true' && 'release-worthy' || 'data-only' }}
 
+      - name: Enable auto-merge for a routine data refresh
+        # A data-only refresh is low-risk and already tested above, so let GitHub
+        # merge it on its own once the required checks pass. Those checks only run
+        # when the PR is opened with a trigger-capable token — the GitHub App
+        # configured above. Without that token the checks never run, so auto-merge
+        # simply waits and the PR still needs an admin merge. A material change
+        # cuts a release, so it is deliberately left for a human to review.
+        if: steps.sync.outputs.changed == 'true' && steps.sync.outputs.material != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+        run: gh pr merge bot/intel-refresh --auto --squash
+
       - name: Report when nothing changed
         if: steps.sync.outputs.changed != 'true'
         run: echo "Feeds are already current; no pull request needed."

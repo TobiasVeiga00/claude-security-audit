@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-09-20T09:49:18.433Z",
+  "generatedAt": "2026-09-26T09:53:10.248Z",
   "sources": {
     "kev": {
-      "count": 1716,
-      "version": "2026.09.18"
+      "count": 1726,
+      "version": "2026.09.25"
     },
     "attack": {
       "domains": {
@@ -76,7 +76,7 @@
     "cvss/v4-tables.json": "593e675715b2307f",
     "cwe/top25.json": "91f4fb645356b599",
     "frameworks.json": "d3a0fca5786715e4",
-    "kev/catalog.json": "6878c40abad827e5",
-    "kev/index.json": "70cf6f86f35c5421"
+    "kev/catalog.json": "e03bee6ba461e550",
+    "kev/index.json": "f546627eb079a989"
   }
 }

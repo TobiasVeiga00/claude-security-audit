@@ -1,8 +1,8 @@
 {
   "source": "CISA Known Exploited Vulnerabilities Catalog",
   "license": "CC0 1.0 Universal (public domain)",
-  "catalogVersion": "2026.09.18",
-  "count": 1716,
+  "catalogVersion": "2026.09.25",
+  "count": 1726,
   "vulnerabilities": [
     {
       "cve": "CVE-2002-0367",
@@ -19768,6 +19768,18 @@
       "cwes": []
     },
     {
+      "cve": "CVE-2026-5430",
+      "vendor": "WSO2",
+      "product": "Multiple Products",
+      "name": "WSO2 Multiple Products Path Traversal Vulnerability ",
+      "dateAdded": "2026-09-24",
+      "dueDate": "2026-09-27",
+      "ransomware": false,
+      "cwes": [
+        "CWE-347"
+      ]
+    },
+    {
       "cve": "CVE-2026-54420",
       "vendor": "LiteSpeed",
       "product": "cPanel Plugin",
@@ -19943,7 +19955,7 @@
       "name": "JetBrains TeamCity Deserialization of Untrusted Data Vulnerability",
       "dateAdded": "2026-08-05",
       "dueDate": "2026-08-08",
-      "ransomware": false,
+      "ransomware": true,
       "cwes": [
         "CWE-502"
       ]
@@ -19973,6 +19985,18 @@
       ]
     },
     {
+      "cve": "CVE-2026-65660",
+      "vendor": "Microsoft",
+      "product": "SharePoint",
+      "name": "Microsoft SharePoint Code Injection Vulnerability",
+      "dateAdded": "2026-09-25",
+      "dueDate": "2026-09-28",
+      "ransomware": false,
+      "cwes": [
+        "CWE-94"
+      ]
+    },
+    {
       "cve": "CVE-2026-66384",
       "vendor": "JFrog",
       "product": "Artifactory",
@@ -19994,6 +20018,18 @@
       "ransomware": false,
       "cwes": [
         "CWE-306"
+      ]
+    },
+    {
+      "cve": "CVE-2026-67279",
+      "vendor": "MikroTik",
+      "product": "RouterOS",
+      "name": "Mikrotik RouterOS Improper Enforcement of Behavioral Workflow Vulnerability",
+      "dateAdded": "2026-09-25",
+      "dueDate": "2026-09-28",
+      "ransomware": false,
+      "cwes": [
+        "CWE-841"
       ]
     },
     {
@@ -20021,6 +20057,18 @@
       ]
     },
     {
+      "cve": "CVE-2026-71362",
+      "vendor": "Adobe",
+      "product": "Commerce and Magento ",
+      "name": "Adobe Commerce and Magento Incorrect Authorization Vulnerability ",
+      "dateAdded": "2026-09-24",
+      "dueDate": "2026-09-27",
+      "ransomware": false,
+      "cwes": [
+        "CWE-863"
+      ]
+    },
+    {
       "cve": "CVE-2026-72529",
       "vendor": "TrueConf",
       "product": "Server",
@@ -20042,6 +20090,18 @@
       "ransomware": false,
       "cwes": [
         "CWE-94"
+      ]
+    },
+    {
+      "cve": "CVE-2026-7273",
+      "vendor": "Zyxel",
+      "product": "GS1900 Series Switches",
+      "name": "Zyxel GS1900 Series Switches Stack-Based Buffer Overflow Vulnerability",
+      "dateAdded": "2026-09-21",
+      "dueDate": "2026-09-24",
+      "ransomware": false,
+      "cwes": [
+        "CWE-121"
       ]
     },
     {
@@ -20252,6 +20312,18 @@
       ]
     },
     {
+      "cve": "CVE-2026-85102",
+      "vendor": "Check Point",
+      "product": "Multiple Products",
+      "name": "Check Point Multiple Products Improper Certificate Validation Vulnerability",
+      "dateAdded": "2026-09-22",
+      "dueDate": "2026-09-25",
+      "ransomware": false,
+      "cwes": [
+        "CWE-295"
+      ]
+    },
+    {
       "cve": "CVE-2026-85706",
       "vendor": "GitLab",
       "product": "Community Edition and Enterprise Edition",
@@ -20325,6 +20397,18 @@
       ]
     },
     {
+      "cve": "CVE-2026-87902",
+      "vendor": "WordPress",
+      "product": "Core",
+      "name": "WordPress Core Remote File Inclusion Vulnerability",
+      "dateAdded": "2026-09-25",
+      "dueDate": "2026-09-28",
+      "ransomware": false,
+      "cwes": [
+        "CWE-98"
+      ]
+    },
+    {
       "cve": "CVE-2026-9082",
       "vendor": "Drupal",
       "product": "Core",
@@ -20346,6 +20430,42 @@
       "ransomware": false,
       "cwes": [
         "CWE-94"
+      ]
+    },
+    {
+      "cve": "CVE-2026-93616",
+      "vendor": "Check Point",
+      "product": "Multiple Products",
+      "name": "Check Point Multiple Products Path Traversal Vulnerability",
+      "dateAdded": "2026-09-22",
+      "dueDate": "2026-09-25",
+      "ransomware": false,
+      "cwes": [
+        "CWE-22"
+      ]
+    },
+    {
+      "cve": "CVE-2026-93952",
+      "vendor": "Arista",
+      "product": "VeloCloud Orchestrator",
+      "name": "Arista VeloCloud Orchestrator Improper Input Validation Vulnerability",
+      "dateAdded": "2026-09-22",
+      "dueDate": "2026-09-25",
+      "ransomware": false,
+      "cwes": [
+        "CWE-20"
+      ]
+    },
+    {
+      "cve": "CVE-2026-94127",
+      "vendor": "F5",
+      "product": "BIG-IP APM",
+      "name": "F5 BIG-IP APM Heap-based Buffer Overflow Vulnerability",
+      "dateAdded": "2026-09-22",
+      "dueDate": "2026-09-25",
+      "ransomware": false,
+      "cwes": [
+        "CWE-122"
       ]
     },
     {
